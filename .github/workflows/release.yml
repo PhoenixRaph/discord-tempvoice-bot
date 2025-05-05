@@ -3,33 +3,78 @@ name: Release
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*.*.*' ]
 
 permissions:
   contents: write
   pull-requests: write
+  packages: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    
     steps:
       - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           release-type: node
           package-name: discord-tempvoice-bot
-          
+          changelog-types: |
+            [
+              {"type":"feat","section":"Features","hidden":false},
+              {"type":"fix","section":"Bug Fixes","hidden":false},
+              {"type":"chore","section":"Maintenance","hidden":false},
+              {"type":"docs","section":"Documentation","hidden":false},
+              {"type":"refactor","section":"Refactor","hidden":false}
+            ]
+
+  build-and-publish:
+    needs: release
+    if: ${{ needs.release.outputs.release_created }}
+    runs-on: ubuntu-latest
+    
+    steps:
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
         
       - uses: oven-sh/setup-bun@v1
-        if: ${{ steps.release.outputs.release_created }}
         with:
           bun-version: latest
           
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+          
       - name: Install dependencies
-        if: ${{ steps.release.outputs.release_created }}
         run: bun install
         
       - name: Build
-        if: ${{ steps.release.outputs.release_created }}
-        run: bun run build 
+        run: bun run build
+        
+      - name: Create release artifact
+        run: |
+          tar -czf discord-bot-${{ needs.release.outputs.tag_name }}.tar.gz \
+            dist/ \
+            package.json \
+            bun.lockb \
+            README.md \
+            LICENSE
+            
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./discord-bot-${{ needs.release.outputs.tag_name }}.tar.gz
+          asset_name: discord-bot-${{ needs.release.outputs.tag_name }}.tar.gz
+          asset_content_type: application/gzip 
