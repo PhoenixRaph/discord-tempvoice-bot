@@ -32,12 +32,13 @@ jobs:
         run: bun install
 
       - name: Run TypeScript check
-        run: bunx tsc --noEmit
+        run: bun run typecheck
 
       - name: Run tests
         run: bun test --coverage
 
       - name: Upload coverage reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -69,7 +70,7 @@ jobs:
         run: bun install
 
       - name: Run ESLint
-        run: bunx eslint . --ext .ts --max-warnings 0
+        run: bun run lint
 
       - name: Run Prettier check
         run: bunx prettier --check "src/**/*.ts" 
