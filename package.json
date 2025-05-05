@@ -1,0 +1,26 @@
+{
+  "name": "discord-tempvoice-bot",
+  "version": "1.0.0",
+  "description": "Discord.js bot with temporary voice channel functionality",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "docker:build": "docker build -t discord-tempvoice-bot .",
+    "docker:run": "docker run -d --name discord-bot -v $(pwd)/data:/app/data -e DISCORD_TOKEN=${DISCORD_TOKEN} discord-tempvoice-bot",
+    "compose:up": "docker-compose up -d",
+    "compose:down": "docker-compose down",
+    "compose:logs": "docker-compose logs -f",
+    "compose:restart": "docker-compose restart"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/sqlite3": "^3.1.11",
+    "bun-types": "latest",
+    "typescript": "^5.3.3"
+  }
+}
