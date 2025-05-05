@@ -2,7 +2,8 @@ import {
   ButtonInteraction, 
   ModalSubmitInteraction,
   ChannelType,
-  GuildMember
+  GuildMember,
+  VoiceChannel
 } from 'discord.js';
 import { createChannelSettingsModal } from '../components/VoiceChannelComponents';
 import db from '../database/db';
@@ -11,7 +12,7 @@ export async function handleVoiceControl(interaction: ButtonInteraction) {
   if (!interaction.guild || !interaction.member) return;
   
   const channel = interaction.guild.channels.cache.get(interaction.channelId);
-  if (!channel?.isVoiceBased()) return;
+  if (!channel?.isVoiceBased() || !(channel instanceof VoiceChannel)) return;
 
   const tempChannel = await db.findTempChannel(channel.id);
   if (!tempChannel || tempChannel.owner_id !== interaction.user.id) {
@@ -37,7 +38,7 @@ export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
   if (!interaction.guild || !interaction.member) return;
   
   const channel = interaction.guild.channels.cache.get(interaction.channelId);
-  if (!channel?.isVoiceBased()) return;
+  if (!channel?.isVoiceBased() || !(channel instanceof VoiceChannel)) return;
 
   const tempChannel = await db.findTempChannel(channel.id);
   if (!tempChannel || tempChannel.owner_id !== interaction.user.id) {

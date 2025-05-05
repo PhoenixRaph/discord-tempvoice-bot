@@ -33,7 +33,7 @@ export function createVoiceChannelControls() {
     );
 }
 
-export function createChannelSettingsModal(currentName: string, currentLimit: number, currentBitrate?: number, currentDescription?: string) {
+export function createChannelSettingsModal(currentName: string | null, currentLimit: number, currentBitrate?: number, currentDescription?: string) {
   return new ModalBuilder()
     .setCustomId('channel_settings_modal')
     .setTitle('Kanaleinstellungen bearbeiten')
@@ -44,7 +44,7 @@ export function createChannelSettingsModal(currentName: string, currentLimit: nu
             .setCustomId('channel_name')
             .setLabel('Kanalname')
             .setStyle(TextInputStyle.Short)
-            .setValue(currentName)
+            .setValue(currentName || 'Temporärer Kanal')
             .setRequired(true)
             .setPlaceholder('» $user$ VC')
         ),
