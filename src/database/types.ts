@@ -46,4 +46,4 @@ export interface LogFilter {
   auto_owner_transfers: boolean;
   manual_owner_transfers: boolean;
   channel_edits: boolean;
-} 
+}

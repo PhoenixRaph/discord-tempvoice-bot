@@ -1,18 +1,18 @@
-import { 
-  ButtonInteraction, 
+import {
+  ButtonInteraction,
   StringSelectMenuInteraction,
   ChatInputCommandInteraction,
-  ChannelType
+  ChannelType,
 } from 'discord.js';
 import { randomUUID } from 'crypto';
 import db from '../database/db';
-import { 
+import {
   createLogSetupEmbed,
   createLogTypeSelect,
   createLogChannelSelect,
   createLogModeSelect,
   createLogControlButtons,
-  createLogFilterButtons
+  createLogFilterButtons,
 } from '../components/LogSetupComponents';
 
 // Cache für den Setup-Prozess
@@ -66,7 +66,7 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
       muteLogEnabled: existingSettings?.mute_log_enabled ?? false,
       muteLogChannelId: existingSettings?.mute_log_channel_id,
       muteLogMode: existingSettings?.mute_log_mode ?? 'simple',
-      auditLogAccess: existingSettings?.audit_log_access ?? false
+      auditLogAccess: existingSettings?.audit_log_access ?? false,
     },
     filters: {
       ban_actions: existingFilters?.ban_actions ?? true,
@@ -76,29 +76,31 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
       channel_creations: existingFilters?.channel_creations ?? true,
       auto_owner_transfers: existingFilters?.auto_owner_transfers ?? true,
       manual_owner_transfers: existingFilters?.manual_owner_transfers ?? true,
-      channel_edits: existingFilters?.channel_edits ?? true
-    }
+      channel_edits: existingFilters?.channel_edits ?? true,
+    },
   });
 
-  const embed = createLogSetupEmbed(existingSettings ?? {
-    id: '',
-    guild_id: interaction.guild.id,
-    bot_log_enabled: false,
-    temp_channel_log_enabled: false,
-    move_log_enabled: false,
-    move_log_mode: 'simple',
-    mute_log_enabled: false,
-    mute_log_mode: 'simple',
-    audit_log_access: false,
-    created_at: new Date(),
-    updated_at: new Date()
-  });
+  const embed = createLogSetupEmbed(
+    existingSettings ?? {
+      id: '',
+      guild_id: interaction.guild.id,
+      bot_log_enabled: false,
+      temp_channel_log_enabled: false,
+      move_log_enabled: false,
+      move_log_mode: 'simple',
+      mute_log_enabled: false,
+      mute_log_mode: 'simple',
+      audit_log_access: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+  );
   const typeSelect = createLogTypeSelect();
 
   await interaction.reply({
     embeds: [embed],
     components: [typeSelect],
-    ephemeral: true
+    ephemeral: true,
   });
 }
 
@@ -118,7 +120,7 @@ export async function handleLogSelectMenu(interaction: StringSelectMenuInteracti
 
     case 'log_channel_select':
       if (!state.currentType) return;
-      
+
       const channelId = interaction.values[0];
       switch (state.currentType) {
         case 'bot_log':
@@ -226,11 +228,11 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
 
   if (state.currentType) {
     // Kanal-Auswahl für den aktuellen Log-Typ
-    const textChannels = interaction.guild!.channels.cache
-      .filter(channel => channel.type === ChannelType.GuildText)
-      .map(channel => ({
+    const textChannels = interaction
+      .guild!.channels.cache.filter((channel) => channel.type === ChannelType.GuildText)
+      .map((channel) => ({
         id: channel.id,
-        name: channel.name
+        name: channel.name,
       }));
     components.push(createLogChannelSelect(textChannels));
 
@@ -264,29 +266,31 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
   }
 
   const existingSettings = await db.getGuildLogSettings(interaction.guild!.id);
-  const embed = createLogSetupEmbed(existingSettings ?? {
-    id: '',
-    guild_id: interaction.guild!.id,
-    bot_log_enabled: false,
-    temp_channel_log_enabled: false,
-    move_log_enabled: false,
-    move_log_mode: 'simple',
-    mute_log_enabled: false,
-    mute_log_mode: 'simple',
-    audit_log_access: false,
-    created_at: new Date(),
-    updated_at: new Date()
-  });
+  const embed = createLogSetupEmbed(
+    existingSettings ?? {
+      id: '',
+      guild_id: interaction.guild!.id,
+      bot_log_enabled: false,
+      temp_channel_log_enabled: false,
+      move_log_enabled: false,
+      move_log_mode: 'simple',
+      mute_log_enabled: false,
+      mute_log_mode: 'simple',
+      audit_log_access: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+  );
 
   if (interaction.replied || interaction.deferred) {
     await interaction.editReply({
       embeds: [embed],
-      components
+      components,
     });
   } else {
     await interaction.update({
       embeds: [embed],
-      components
+      components,
     });
   }
 }
@@ -298,7 +302,7 @@ async function saveLogSettings(interaction: ButtonInteraction) {
   try {
     // Erstelle oder aktualisiere die Einstellungen
     const existingSettings = await db.getGuildLogSettings(interaction.guild!.id);
-    
+
     if (existingSettings) {
       await db.updateGuildLogSettings(interaction.guild!.id, {
         bot_log_enabled: state.settings.botLogEnabled,
@@ -311,7 +315,7 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         mute_log_enabled: state.settings.muteLogEnabled,
         mute_log_channel_id: state.settings.muteLogChannelId,
         mute_log_mode: state.settings.muteLogMode,
-        audit_log_access: state.settings.auditLogAccess
+        audit_log_access: state.settings.auditLogAccess,
       });
     } else {
       await db.createGuildLogSettings({
@@ -327,7 +331,7 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         muteLogEnabled: state.settings.muteLogEnabled,
         muteLogChannelId: state.settings.muteLogChannelId,
         muteLogMode: state.settings.muteLogMode,
-        auditLogAccess: state.settings.auditLogAccess
+        auditLogAccess: state.settings.auditLogAccess,
       });
     }
 
@@ -336,13 +340,13 @@ async function saveLogSettings(interaction: ButtonInteraction) {
 
     await interaction.reply({
       content: 'Die Einstellungen wurden erfolgreich gespeichert!',
-      ephemeral: true
+      ephemeral: true,
     });
   } catch (error) {
     console.error('Fehler beim Speichern der Log-Einstellungen:', error);
     await interaction.reply({
       content: 'Es ist ein Fehler beim Speichern der Einstellungen aufgetreten.',
-      ephemeral: true
+      ephemeral: true,
     });
   }
-} 
+}

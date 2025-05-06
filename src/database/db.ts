@@ -87,11 +87,14 @@ await runAsync(`
   )
 `);
 
-export async function findSettings(guildId: string, creatorChannelId: string): Promise<TempVoiceSettings | null> {
-  const result = await getAsync(
+export async function findSettings(
+  guildId: string,
+  creatorChannelId: string,
+): Promise<TempVoiceSettings | null> {
+  const result = (await getAsync(
     'SELECT * FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
-    [guildId, creatorChannelId]
-  ) as TempVoiceSettings | null;
+    [guildId, creatorChannelId],
+  )) as TempVoiceSettings | null;
   return result;
 }
 
@@ -113,16 +116,13 @@ export async function createSettings(data: {
       data.creatorChannelId,
       data.defaultName || "{username}'s Channel",
       data.defaultSlots || 0,
-      data.defaultBitrate || 64000
-    ]
+      data.defaultBitrate || 64000,
+    ],
   );
 }
 
 export async function deleteGuildSettings(guildId: string) {
-  await runAsync(
-    'DELETE FROM temp_voice_settings WHERE guild_id = ?',
-    [guildId]
-  );
+  await runAsync('DELETE FROM temp_voice_settings WHERE guild_id = ?', [guildId]);
 }
 
 export async function createTempChannel(data: {
@@ -138,38 +138,25 @@ export async function createTempChannel(data: {
     `INSERT INTO temp_voice_channels (
       id, guild_id, channel_id, owner_id, name, slots, bitrate
     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      data.id,
-      data.guildId,
-      data.channelId,
-      data.ownerId,
-      data.name,
-      data.slots,
-      data.bitrate
-    ]
+    [data.id, data.guildId, data.channelId, data.ownerId, data.name, data.slots, data.bitrate],
   );
 }
 
 export async function findTempChannel(channelId: string): Promise<TempVoiceChannel | null> {
-  const result = await getAsync(
-    'SELECT * FROM temp_voice_channels WHERE channel_id = ?',
-    [channelId]
-  ) as TempVoiceChannel | null;
+  const result = (await getAsync('SELECT * FROM temp_voice_channels WHERE channel_id = ?', [
+    channelId,
+  ])) as TempVoiceChannel | null;
   return result;
 }
 
 export async function deleteTempChannel(id: string) {
-  await runAsync(
-    'DELETE FROM temp_voice_channels WHERE id = ?',
-    [id]
-  );
+  await runAsync('DELETE FROM temp_voice_channels WHERE id = ?', [id]);
 }
 
 export async function getGuildLogSettings(guildId: string): Promise<GuildLogSettings | null> {
-  const result = await getAsync(
-    'SELECT * FROM guild_log_settings WHERE guild_id = ?',
-    [guildId]
-  ) as GuildLogSettings | null;
+  const result = (await getAsync('SELECT * FROM guild_log_settings WHERE guild_id = ?', [
+    guildId,
+  ])) as GuildLogSettings | null;
   return result;
 }
 
@@ -209,8 +196,8 @@ export async function createGuildLogSettings(data: {
       data.muteLogEnabled ?? false,
       data.muteLogChannelId,
       data.muteLogMode ?? 'simple',
-      data.auditLogAccess ?? false
-    ]
+      data.auditLogAccess ?? false,
+    ],
   );
 }
 
@@ -229,15 +216,14 @@ export async function updateGuildLogSettings(guildId: string, data: Partial<Guil
 
   await runAsync(
     `UPDATE guild_log_settings SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE guild_id = ?`,
-    values
+    values,
   );
 }
 
 export async function getLogFilters(guildId: string): Promise<LogFilter | null> {
-  const result = await getAsync(
-    'SELECT * FROM log_filters WHERE guild_id = ?',
-    [guildId]
-  ) as LogFilter | null;
+  const result = (await getAsync('SELECT * FROM log_filters WHERE guild_id = ?', [
+    guildId,
+  ])) as LogFilter | null;
   return result;
 }
 
@@ -254,25 +240,21 @@ export async function updateLogFilters(guildId: string, filters: Partial<LogFilt
 
   values.push(guildId);
 
-  await runAsync(
-    `UPDATE log_filters SET ${updates.join(', ')} WHERE guild_id = ?`,
-    values
-  );
+  await runAsync(`UPDATE log_filters SET ${updates.join(', ')} WHERE guild_id = ?`, values);
 }
 
 export async function getAllSettings(guildId: string): Promise<TempVoiceSettings[]> {
-  const result = await allAsync(
-    'SELECT * FROM temp_voice_settings WHERE guild_id = ?',
-    [guildId]
-  ) as TempVoiceSettings[];
+  const result = (await allAsync('SELECT * FROM temp_voice_settings WHERE guild_id = ?', [
+    guildId,
+  ])) as TempVoiceSettings[];
   return result;
 }
 
 export async function deleteCreatorSettings(guildId: string, creatorChannelId: string) {
-  await runAsync(
-    'DELETE FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
-    [guildId, creatorChannelId]
-  );
+  await runAsync('DELETE FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?', [
+    guildId,
+    creatorChannelId,
+  ]);
 }
 
 export default {
@@ -288,5 +270,5 @@ export default {
   getLogFilters,
   updateLogFilters,
   getAllSettings,
-  deleteCreatorSettings
-}; 
+  deleteCreatorSettings,
+};

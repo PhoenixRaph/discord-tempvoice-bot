@@ -1,22 +1,22 @@
-import { 
-  ModalBuilder, 
-  TextInputBuilder, 
+import {
+  ModalBuilder,
+  TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
   ChannelType,
   ButtonInteraction,
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
-  ChatInputCommandInteraction
+  ChatInputCommandInteraction,
 } from 'discord.js';
 import { randomUUID } from 'crypto';
 import db from '../database/db';
-import { 
+import {
   createSetupEmbed,
   createSetupActionRow,
   createCategorySelect,
   createPermissionsSelect,
-  createActionButtons
+  createActionButtons,
 } from '../components/SetupComponents';
 
 // Temporärer Speicher für Setup-Prozess
@@ -44,7 +44,7 @@ export async function handleSetupCommand(interaction: ChatInputCommandInteractio
   if (existingSettings) {
     await interaction.reply({
       content: 'Dieser Kanal ist bereits als Voice-Channel Creator konfiguriert.',
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -57,8 +57,8 @@ export async function handleSetupCommand(interaction: ChatInputCommandInteractio
       name: '» $user$ VC',
       limit: 10,
       bitrate: 64000,
-      description: 'VC = Voice Chat ;)'
-    }
+      description: 'VC = Voice Chat ;)',
+    },
   });
 
   const embed = createSetupEmbed();
@@ -68,7 +68,7 @@ export async function handleSetupCommand(interaction: ChatInputCommandInteractio
   await interaction.reply({
     embeds: [embed],
     components: [actionRow, actionButtons],
-    ephemeral: true
+    ephemeral: true,
   });
 }
 
@@ -87,20 +87,20 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
           creatorChannelId: state.creatorChannel,
           defaultName: state.settings.name,
           defaultSlots: state.settings.limit,
-          defaultBitrate: state.settings.bitrate
+          defaultBitrate: state.settings.bitrate,
         });
 
         setupCache.delete(interaction.guild.id);
 
         await interaction.reply({
           content: 'Voice-Channel Creator wurde erfolgreich eingerichtet!',
-          ephemeral: true
+          ephemeral: true,
         });
       } catch (error) {
         console.error('Fehler beim Speichern der Einstellungen:', error);
         await interaction.reply({
           content: 'Es ist ein Fehler beim Speichern der Einstellungen aufgetreten.',
-          ephemeral: true
+          ephemeral: true,
         });
       }
       break;
@@ -110,47 +110,43 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         .setCustomId('setup_settings_modal')
         .setTitle('Kanaleinstellungen bearbeiten')
         .addComponents(
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(
-              new TextInputBuilder()
-                .setCustomId('channel_name')
-                .setLabel('Standard Kanalname ($user$ = Benutzername)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(state.settings.name)
-                .setRequired(true)
-                .setPlaceholder('» $user$ VC')
-            ),
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(
-              new TextInputBuilder()
-                .setCustomId('user_limit')
-                .setLabel('Standard Nutzerlimit (0 = Unbegrenzt)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(state.settings.limit.toString())
-                .setRequired(true)
-                .setMinLength(1)
-                .setMaxLength(2)
-            ),
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(
-              new TextInputBuilder()
-                .setCustomId('bitrate')
-                .setLabel('Standard Bitrate (In Kbps)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(state.settings.bitrate.toString())
-                .setRequired(true)
-                .setPlaceholder('64000')
-            ),
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(
-              new TextInputBuilder()
-                .setCustomId('description')
-                .setLabel('Beschreibung')
-                .setStyle(TextInputStyle.Paragraph)
-                .setValue(state.settings.description)
-                .setRequired(false)
-                .setPlaceholder('Eine Beschreibung für die temporären Channels')
-            )
+          new ActionRowBuilder<TextInputBuilder>().addComponents(
+            new TextInputBuilder()
+              .setCustomId('channel_name')
+              .setLabel('Standard Kanalname ($user$ = Benutzername)')
+              .setStyle(TextInputStyle.Short)
+              .setValue(state.settings.name)
+              .setRequired(true)
+              .setPlaceholder('» $user$ VC'),
+          ),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(
+            new TextInputBuilder()
+              .setCustomId('user_limit')
+              .setLabel('Standard Nutzerlimit (0 = Unbegrenzt)')
+              .setStyle(TextInputStyle.Short)
+              .setValue(state.settings.limit.toString())
+              .setRequired(true)
+              .setMinLength(1)
+              .setMaxLength(2),
+          ),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(
+            new TextInputBuilder()
+              .setCustomId('bitrate')
+              .setLabel('Standard Bitrate (In Kbps)')
+              .setStyle(TextInputStyle.Short)
+              .setValue(state.settings.bitrate.toString())
+              .setRequired(true)
+              .setPlaceholder('64000'),
+          ),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(
+            new TextInputBuilder()
+              .setCustomId('description')
+              .setLabel('Beschreibung')
+              .setStyle(TextInputStyle.Paragraph)
+              .setValue(state.settings.description)
+              .setRequired(false)
+              .setPlaceholder('Eine Beschreibung für die temporären Channels'),
+          ),
         );
 
       await interaction.showModal(modal);
@@ -160,7 +156,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       setupCache.delete(interaction.guild.id);
       await interaction.reply({
         content: 'Setup wurde abgebrochen.',
-        ephemeral: true
+        ephemeral: true,
       });
       break;
   }
@@ -181,7 +177,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
     if (isNaN(newLimit) || newLimit < 0 || newLimit > 99) {
       await interaction.reply({
         content: 'Bitte gib eine gültige Zahl zwischen 0 und 99 für das Nutzerlimit ein.',
-        ephemeral: true
+        ephemeral: true,
       });
       return;
     }
@@ -189,7 +185,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
     if (isNaN(newBitrate) || newBitrate < 8 || newBitrate > 384) {
       await interaction.reply({
         content: 'Bitte gib eine gültige Bitrate zwischen 8 und 384 ein.',
-        ephemeral: true
+        ephemeral: true,
       });
       return;
     }
@@ -198,7 +194,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
       name: newName,
       limit: newLimit,
       bitrate: newBitrate * 1000, // Umrechnung in bps
-      description: newDescription
+      description: newDescription,
     };
 
     setupCache.set(interaction.guild.id, state);
@@ -210,7 +206,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
     await interaction.reply({
       embeds: [embed],
       components: [actionRow, actionButtons],
-      ephemeral: true
+      ephemeral: true,
     });
   }
-} 
+}

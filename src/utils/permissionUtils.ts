@@ -1,9 +1,9 @@
-import { 
-  EmbedBuilder, 
+import {
+  EmbedBuilder,
   PermissionsBitField,
   PermissionResolvable,
   GuildMember,
-  Client
+  Client,
 } from 'discord.js';
 
 interface MissingPermission {
@@ -20,7 +20,7 @@ const PERMISSION_DESCRIPTIONS: { [key: string]: string } = {
   Stream: 'Video streamen',
   UseVAD: 'Sprachaktivierung nutzen',
   PrioritySpeaker: 'Prioritätssprecher',
-  
+
   // Nachrichten-Berechtigungen
   SendMessages: 'Nachrichten senden',
   EmbedLinks: 'Links einbetten',
@@ -29,7 +29,7 @@ const PERMISSION_DESCRIPTIONS: { [key: string]: string } = {
   ManageMessages: 'Nachrichten verwalten',
   AddReactions: 'Reaktionen hinzufügen',
   UseExternalEmojis: 'Externe Emojis verwenden',
-  
+
   // Mitglieder-Berechtigungen
   ManageRoles: 'Rollen verwalten',
   MoveMembers: 'Mitglieder verschieben',
@@ -38,22 +38,22 @@ const PERMISSION_DESCRIPTIONS: { [key: string]: string } = {
   ModerateMembers: 'Mitglieder moderieren',
   KickMembers: 'Mitglieder kicken',
   BanMembers: 'Mitglieder bannen',
-  
+
   // Server-Berechtigungen
   ViewAuditLog: 'Audit-Log anzeigen',
   ManageGuild: 'Server verwalten',
   ManageWebhooks: 'Webhooks verwalten',
   ManageEmojisAndStickers: 'Emojis und Sticker verwalten',
-  
+
   // Sonstiges
   CreateInstantInvite: 'Einladungen erstellen',
   ChangeNickname: 'Nickname ändern',
-  ManageNicknames: 'Nicknamen verwalten'
+  ManageNicknames: 'Nicknamen verwalten',
 };
 
 export function createPermissionErrorEmbed(
   member: GuildMember,
-  requiredPermissions: PermissionResolvable[]
+  requiredPermissions: PermissionResolvable[],
 ): EmbedBuilder {
   const missingPermissions: MissingPermission[] = [];
 
@@ -62,7 +62,7 @@ export function createPermissionErrorEmbed(
       const permName = String(permission);
       missingPermissions.push({
         name: permName,
-        description: PERMISSION_DESCRIPTIONS[permName] || permName
+        description: PERMISSION_DESCRIPTIONS[permName] || permName,
       });
     }
   }
@@ -75,24 +75,26 @@ export function createPermissionErrorEmbed(
 
   if (missingPermissions.length > 0) {
     const permissionList = missingPermissions
-      .map(perm => `• **${perm.description}** (${perm.name})`)
+      .map((perm) => `• **${perm.description}** (${perm.name})`)
       .join('\n');
 
     embed.addFields({
       name: 'Fehlende Berechtigungen',
-      value: permissionList
+      value: permissionList,
     });
 
     embed.addFields({
       name: 'Hinweis',
-      value: 'Bitte stelle sicher, dass der Bot die notwendigen Berechtigungen hat, um alle Funktionen korrekt ausführen zu können. ' +
-             'Du kannst die Berechtigungen in den Server-Einstellungen unter "Rollen" anpassen.'
+      value:
+        'Bitte stelle sicher, dass der Bot die notwendigen Berechtigungen hat, um alle Funktionen korrekt ausführen zu können. ' +
+        'Du kannst die Berechtigungen in den Server-Einstellungen unter "Rollen" anpassen.',
     });
   } else {
     embed.addFields({
       name: 'Information',
-      value: 'Alle erforderlichen Berechtigungen sind vorhanden, aber es ist ein anderer Fehler aufgetreten. ' +
-             'Bitte überprüfe die Server-Einstellungen und versuche es erneut.'
+      value:
+        'Alle erforderlichen Berechtigungen sind vorhanden, aber es ist ein anderer Fehler aufgetreten. ' +
+        'Bitte überprüfe die Server-Einstellungen und versuche es erneut.',
     });
   }
 
@@ -102,7 +104,7 @@ export function createPermissionErrorEmbed(
 export function checkBotPermissions(
   client: Client,
   guildId: string,
-  requiredPermissions: PermissionResolvable[]
+  requiredPermissions: PermissionResolvable[],
 ): { hasPermissions: boolean; missingPermissions: PermissionResolvable[] } {
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return { hasPermissions: false, missingPermissions: requiredPermissions };
@@ -111,11 +113,11 @@ export function checkBotPermissions(
   if (!botMember) return { hasPermissions: false, missingPermissions: requiredPermissions };
 
   const missingPermissions = requiredPermissions.filter(
-    permission => !botMember.permissions.has(permission)
+    (permission) => !botMember.permissions.has(permission),
   );
 
   return {
     hasPermissions: missingPermissions.length === 0,
-    missingPermissions
+    missingPermissions,
   };
-} 
+}

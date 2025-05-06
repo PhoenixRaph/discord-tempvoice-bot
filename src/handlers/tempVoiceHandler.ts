@@ -6,15 +6,15 @@ import { createVoiceChannelControls } from '../components/VoiceChannelComponents
 export async function handleTempVoice(oldState: VoiceState, newState: VoiceState) {
   // Benutzer ist einem Voice-Channel beigetreten
   if (newState.channel) {
-    const settings = await db.findSettings(
-      newState.guild.id,
-      newState.channel.id
-    );
+    const settings = await db.findSettings(newState.guild.id, newState.channel.id);
 
     // Prüfe, ob der beigetretene Channel ein Creator-Channel ist
     if (settings) {
       try {
-        const channelName = settings.default_name.replace('{username}', newState.member?.displayName || 'Benutzer');
+        const channelName = settings.default_name.replace(
+          '{username}',
+          newState.member?.displayName || 'Benutzer',
+        );
 
         // Erstelle neuen temporären Voice-Channel
         const channel = await newState.guild.channels.create({
@@ -40,13 +40,14 @@ export async function handleTempVoice(oldState: VoiceState, newState: VoiceState
         await newState.setChannel(channel);
 
         // Sende die Kontrollnachricht
-        const textChannel = channel.parent?.children.cache
-          .find(ch => ch.type === ChannelType.GuildText);
-          
+        const textChannel = channel.parent?.children.cache.find(
+          (ch) => ch.type === ChannelType.GuildText,
+        );
+
         if (textChannel?.isTextBased()) {
           await textChannel.send({
             content: `Willkommen in deinem temporären Voice-Channel, ${newState.member?.toString()}!`,
-            components: [createVoiceChannelControls()]
+            components: [createVoiceChannelControls()],
           });
         }
 
@@ -58,7 +59,7 @@ export async function handleTempVoice(oldState: VoiceState, newState: VoiceState
           ownerId: newState.member!.id,
           name: channelName,
           slots: settings.default_slots,
-          bitrate: settings.default_bitrate
+          bitrate: settings.default_bitrate,
         });
       } catch (error) {
         console.error('Fehler beim Erstellen des temporären Voice-Channels:', error);
@@ -80,4 +81,4 @@ export async function handleTempVoice(oldState: VoiceState, newState: VoiceState
       }
     }
   }
-} 
+}

@@ -1,5 +1,8 @@
 import { describe, test, expect } from 'bun:test';
-import { createChannelSettingsModal, createVoiceChannelControls } from '../components/VoiceChannelComponents';
+import {
+  createChannelSettingsModal,
+  createVoiceChannelControls,
+} from '../components/VoiceChannelComponents';
 import { ButtonStyle } from 'discord.js';
 
 describe('VoiceChannelComponents', () => {
@@ -33,4 +36,4 @@ describe('VoiceChannelComponents', () => {
     const limitInput = components[1].components[0];
     expect(limitInput.data.value).toBe('5');
   });
-}); 
+});
