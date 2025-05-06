@@ -1,9 +1,4 @@
-import {
-  EmbedBuilder,
-  PermissionResolvable,
-  GuildMember,
-  Client,
-} from 'discord.js';
+import { EmbedBuilder, PermissionResolvable, GuildMember, Client } from 'discord.js';
 
 interface MissingPermission {
   name: string;

@@ -1,8 +1,4 @@
-import {
-  ButtonInteraction,
-  ModalSubmitInteraction,
-  VoiceChannel,
-} from 'discord.js';
+import { ButtonInteraction, ModalSubmitInteraction, VoiceChannel } from 'discord.js';
 import { createChannelSettingsModal } from '../components/VoiceChannelComponents';
 import db from '../database/db';
 

@@ -2,12 +2,19 @@ import sqlite3 from 'sqlite3';
 import { join } from 'path';
 import { promisify } from 'util';
 import { TempVoiceSettings, TempVoiceChannel, GuildLogSettings, LogFilter } from './types';
+import { Database, RunResult } from 'better-sqlite3';
+import {
+  TempChannel,
+  DatabaseResult,
+  DatabaseError,
+  DatabaseQueryResult,
+  DatabaseTransaction,
+} from './types';
 
 // Initialize database
 const db = new sqlite3.Database(join(process.cwd(), 'data.db'));
 
 // Promisify run and get methods with proper typing
-type RunResult = { lastID: number; changes: number };
 type SqliteGet = {
   (sql: string, params: any[]): Promise<any>;
   (sql: string): Promise<any>;
@@ -87,38 +94,30 @@ await runAsync(`
   )
 `);
 
-export async function findSettings(
-  guildId: string,
-  creatorChannelId: string,
-): Promise<TempVoiceSettings | null> {
-  const result = (await getAsync(
-    'SELECT * FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
-    [guildId, creatorChannelId],
-  )) as TempVoiceSettings | null;
-  return result;
+export async function findSettings(guildId: string, creatorChannelId: string): Promise<TempVoiceSettings | undefined> {
+  try {
+    const result = await getAsync(
+      'SELECT * FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
+      [guildId, creatorChannelId],
+    );
+    return result;
+  } catch (error) {
+    const dbError = error as DatabaseError;
+    throw new Error(`Failed to find settings: ${dbError.message}`);
+  }
 }
 
-export async function createSettings(data: {
-  id: string;
-  guildId: string;
-  creatorChannelId: string;
-  defaultName?: string;
-  defaultSlots?: number;
-  defaultBitrate?: number;
-}) {
-  await runAsync(
-    `INSERT INTO temp_voice_settings (
-      id, guild_id, creator_channel_id, default_name, default_slots, default_bitrate
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      data.id,
-      data.guildId,
-      data.creatorChannelId,
-      data.defaultName || "{username}'s Channel",
-      data.defaultSlots || 0,
-      data.defaultBitrate || 64000,
-    ],
-  );
+export async function createSettings(settings: TempVoiceSettings): Promise<DatabaseResult> {
+  try {
+    const result = await runAsync(
+      'INSERT INTO temp_voice_settings (id, guild_id, creator_channel_id, default_name, default_slots, default_bitrate) VALUES (?, ?, ?, ?, ?, ?)',
+      [settings.id, settings.guild_id, settings.creator_channel_id, settings.default_name, settings.default_slots, settings.default_bitrate],
+    );
+    return result;
+  } catch (error) {
+    const dbError = error as DatabaseError;
+    throw new Error(`Failed to create settings: ${dbError.message}`);
+  }
 }
 
 export async function deleteGuildSettings(guildId: string) {

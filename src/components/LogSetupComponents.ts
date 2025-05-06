@@ -8,15 +8,6 @@ import {
 } from 'discord.js';
 import { GuildLogSettings, LogFilter } from '../database/types';
 
-// Angepasste Typen für die UI-Komponenten
-interface UIGuildLogSettings
-  extends Omit<GuildLogSettings, 'id' | 'guild_id' | 'created_at' | 'updated_at'> {
-  bot_log_channel_id: string | undefined;
-  temp_channel_log_channel_id: string | undefined;
-  move_log_channel_id: string | undefined;
-  mute_log_channel_id: string | undefined;
-}
-
 export function createLogSetupEmbed(settings?: GuildLogSettings) {
   const embed = new EmbedBuilder()
     .setTitle('Voice Setup - Übersicht')
