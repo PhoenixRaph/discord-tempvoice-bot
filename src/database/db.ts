@@ -2,13 +2,7 @@ import sqlite3 from 'sqlite3';
 import { join } from 'path';
 import { promisify } from 'util';
 import { TempVoiceSettings, TempChannel, GuildLogSettings, LogFilter } from './types';
-import { Database, RunResult } from 'better-sqlite3';
-import {
-  DatabaseResult,
-  DatabaseError,
-  DatabaseQueryResult,
-  DatabaseTransaction,
-} from './types';
+import { DatabaseResult, DatabaseError } from './types';
 
 // Initialize database
 const db = new sqlite3.Database(join(process.cwd(), 'data.db'));
