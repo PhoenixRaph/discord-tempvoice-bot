@@ -37,13 +37,6 @@ jobs:
       - name: Run tests
         run: bun test --coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage-final.json
-          fail_ci_if_error: true
-
   lint:
     runs-on: ubuntu-latest
 
