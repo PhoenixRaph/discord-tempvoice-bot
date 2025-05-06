@@ -128,19 +128,17 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            discord-tempvoice-bot:latest
-            ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
 
-      - name: Run Trivy vulnerability scanner on local image
+      - name: Run Trivy vulnerability scanner on build output
         uses: aquasecurity/trivy-action@master
-        if: github.event_name != 'pull_request'
         with:
-          image-ref: discord-tempvoice-bot:latest
+          scan-type: 'fs'
+          scan-ref: './dist'
           format: 'table'
           severity: 'CRITICAL,HIGH' 
