@@ -117,15 +117,19 @@ export async function handleLogSelectMenu(interaction: StringSelectMenuInteracti
       switch (state.currentType) {
         case 'bot_log':
           state.settings.botLogChannelId = channelId;
+          state.settings.botLogEnabled = true;
           break;
         case 'temp_channel_log':
           state.settings.tempChannelLogChannelId = channelId;
+          state.settings.tempChannelLogEnabled = true;
           break;
         case 'move_log':
           state.settings.moveLogChannelId = channelId;
+          state.settings.moveLogEnabled = true;
           break;
         case 'mute_log':
           state.settings.muteLogChannelId = channelId;
+          state.settings.muteLogEnabled = true;
           break;
       }
       setupCache.set(interaction.guild.id, state);
@@ -256,36 +260,38 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
     }
   }
 
-  const existingSettings = await db.getGuildLogSettings(interaction.guild!.id);
-  const embed = createLogSetupEmbed(
-    existingSettings ?? {
-      id: '',
-      guild_id: interaction.guild!.id,
-      bot_log_enabled: false,
-      bot_log_channel_id: null,
-      temp_channel_log_enabled: false,
-      temp_channel_log_channel_id: null,
-      move_log_enabled: false,
-      move_log_channel_id: null,
-      move_log_mode: 'simple',
-      mute_log_enabled: false,
-      mute_log_channel_id: null,
-      mute_log_mode: 'simple',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  );
+  // Erstelle das Embed mit den aktuellen Einstellungen
+  const embed = createLogSetupEmbed({
+    id: '',
+    guild_id: interaction.guild!.id,
+    bot_log_enabled: state.settings.botLogEnabled,
+    bot_log_channel_id: state.settings.botLogChannelId,
+    temp_channel_log_enabled: state.settings.tempChannelLogEnabled,
+    temp_channel_log_channel_id: state.settings.tempChannelLogChannelId,
+    move_log_enabled: state.settings.moveLogEnabled,
+    move_log_channel_id: state.settings.moveLogChannelId,
+    move_log_mode: state.settings.moveLogMode,
+    mute_log_enabled: state.settings.muteLogEnabled,
+    mute_log_channel_id: state.settings.muteLogChannelId,
+    mute_log_mode: state.settings.muteLogMode,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
-  if (interaction.replied || interaction.deferred) {
-    await interaction.editReply({
-      embeds: [embed],
-      components,
-    });
-  } else {
-    await interaction.update({
-      embeds: [embed],
-      components,
-    });
+  try {
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply({
+        embeds: [embed],
+        components,
+      });
+    } else {
+      await interaction.update({
+        embeds: [embed],
+        components,
+      });
+    }
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren der Nachricht:', error);
   }
 }
 
