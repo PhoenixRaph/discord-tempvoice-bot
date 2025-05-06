@@ -1,5 +1,3 @@
-import { GuildLogSettings, LogFilter } from './types';
-
 export interface TempVoiceSettings {
   id: string;
   guild_id: string;
