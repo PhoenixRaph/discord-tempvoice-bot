@@ -9,6 +9,11 @@ permissions:
   contents: write
   pull-requests: write
   packages: write
+  issues: write
+  actions: write
+  statuses: write
+  checks: write
+  deployments: write
 
 jobs:
   release:
@@ -19,11 +24,12 @@ jobs:
       upload_url: ${{ steps.release.outputs.upload_url }}
     
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v3
         id: release
         with:
           release-type: node
           package-name: discord-tempvoice-bot
+          token: ${{ secrets.GITHUB_TOKEN }}
           changelog-types: |
             [
               {"type":"feat","section":"Features","hidden":false},
