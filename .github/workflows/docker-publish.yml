@@ -50,7 +50,7 @@ jobs:
         
       - name: Run tests
         run: bun test
-        
+
   security:
     runs-on: ubuntu-latest
     permissions:
@@ -58,6 +58,17 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+          
+      - name: Run security audit
+        run: bun run audit
           
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -131,6 +142,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         if: github.event_name != 'pull_request'
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           format: 'table'
           severity: 'CRITICAL,HIGH' 

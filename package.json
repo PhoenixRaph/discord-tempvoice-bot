@@ -18,7 +18,8 @@
     "compose:down": "docker-compose down",
     "compose:logs": "docker-compose logs -f",
     "compose:restart": "docker-compose restart",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "audit": "bunx audit"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
