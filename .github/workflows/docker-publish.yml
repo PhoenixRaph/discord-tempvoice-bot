@@ -139,6 +139,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: './dist'
+          scan-ref: '.'
           format: 'table'
           severity: 'CRITICAL,HIGH' 
