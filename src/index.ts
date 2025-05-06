@@ -13,11 +13,16 @@ import { handleButtonInteraction, handleModalSubmit } from './handlers/setupHand
 import { handleVoiceControl, handleSettingsModal } from './handlers/voiceControlHandler';
 import { handleLogButton, handleLogSelectMenu } from './handlers/logSetupHandler';
 import { createPermissionErrorEmbed, checkBotPermissions } from './utils/permissionUtils';
+import { command as tempVoiceCommand } from './commands/tempvoice';
 
 // Create Discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
+
+// Initialize commands collection
+client.commands = new Collection();
+client.commands.set(tempVoiceCommand.data.name, tempVoiceCommand);
 
 // Command handling
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -61,7 +66,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
     // Normale Interaktionsverarbeitung
     if (interaction.isChatInputCommand()) {
-      const command = (client as any).commands.get(interaction.commandName);
+      const command = client.commands.get(interaction.commandName);
 
       if (!command) {
         console.error(`Kein Befehl mit dem Namen ${interaction.commandName} gefunden.`);

@@ -1,9 +1,14 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, ChannelType, SlashCommandSubcommandsOnlyBuilder } from 'discord.js';
 import { handleSetupCommand } from '../handlers/setupHandler';
 import { handleLogSetupCommand } from '../handlers/logSetupHandler';
 import db from '../database/db';
 
-export const command = {
+export interface Command {
+  data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+}
+
+export const command: Command = {
   data: new SlashCommandBuilder()
     .setName('tempvoice')
     .setDescription('Verwalte temporäre Voice-Channels')
