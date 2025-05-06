@@ -1,10 +1,9 @@
 import sqlite3 from 'sqlite3';
 import { join } from 'path';
 import { promisify } from 'util';
-import { TempVoiceSettings, TempVoiceChannel, GuildLogSettings, LogFilter } from './types';
+import { TempVoiceSettings, TempChannel, GuildLogSettings, LogFilter } from './types';
 import { Database, RunResult } from 'better-sqlite3';
 import {
-  TempChannel,
   DatabaseResult,
   DatabaseError,
   DatabaseQueryResult,
@@ -141,10 +140,10 @@ export async function createTempChannel(data: {
   );
 }
 
-export async function findTempChannel(channelId: string): Promise<TempVoiceChannel | null> {
+export async function findTempChannel(channelId: string): Promise<TempChannel | null> {
   const result = (await getAsync('SELECT * FROM temp_voice_channels WHERE channel_id = ?', [
     channelId,
-  ])) as TempVoiceChannel | null;
+  ])) as TempChannel | null;
   return result;
 }
 

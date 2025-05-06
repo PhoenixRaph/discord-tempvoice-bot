@@ -79,11 +79,13 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       try {
         await db.createSettings({
           id: randomUUID(),
-          guildId: interaction.guild.id,
-          creatorChannelId: state.creatorChannel,
-          defaultName: state.settings.name,
-          defaultSlots: state.settings.limit,
-          defaultBitrate: state.settings.bitrate,
+          guild_id: interaction.guild.id,
+          creator_channel_id: state.creatorChannel,
+          default_name: state.settings.name,
+          default_slots: state.settings.limit,
+          default_bitrate: state.settings.bitrate,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
 
         setupCache.delete(interaction.guild.id);

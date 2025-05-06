@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import { randomUUID } from 'crypto';
 import db from '../database/db';
+import { GuildLogSettings, LogFilter } from '../database/types';
 import {
   createLogSetupEmbed,
   createLogTypeSelect,
@@ -20,27 +21,17 @@ interface LogSetupState {
   currentType: 'bot_log' | 'temp_channel_log' | 'move_log' | 'mute_log' | null;
   settings: {
     botLogEnabled: boolean;
-    botLogChannelId?: string;
+    botLogChannelId: string | null;
     tempChannelLogEnabled: boolean;
-    tempChannelLogChannelId?: string;
+    tempChannelLogChannelId: string | null;
     moveLogEnabled: boolean;
-    moveLogChannelId?: string;
+    moveLogChannelId: string | null;
     moveLogMode: 'simple' | 'detailed';
     muteLogEnabled: boolean;
-    muteLogChannelId?: string;
+    muteLogChannelId: string | null;
     muteLogMode: 'simple' | 'detailed';
-    auditLogAccess: boolean;
   };
-  filters: {
-    ban_actions: boolean;
-    unban_actions: boolean;
-    kick_actions: boolean;
-    channel_deletions: boolean;
-    channel_creations: boolean;
-    auto_owner_transfers: boolean;
-    manual_owner_transfers: boolean;
-    channel_edits: boolean;
-  };
+  filters: LogFilter;
 }
 
 const setupCache = new Map<string, LogSetupState>();
@@ -66,7 +57,6 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
       muteLogEnabled: existingSettings?.mute_log_enabled ?? false,
       muteLogChannelId: existingSettings?.mute_log_channel_id,
       muteLogMode: existingSettings?.mute_log_mode ?? 'simple',
-      auditLogAccess: existingSettings?.audit_log_access ?? false,
     },
     filters: {
       ban_actions: existingFilters?.ban_actions ?? true,
@@ -90,7 +80,6 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
       move_log_mode: 'simple',
       mute_log_enabled: false,
       mute_log_mode: 'simple',
-      audit_log_access: false,
       created_at: new Date(),
       updated_at: new Date(),
     },
@@ -276,7 +265,6 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
       move_log_mode: 'simple',
       mute_log_enabled: false,
       mute_log_mode: 'simple',
-      audit_log_access: false,
       created_at: new Date(),
       updated_at: new Date(),
     },
@@ -315,7 +303,6 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         mute_log_enabled: state.settings.muteLogEnabled,
         mute_log_channel_id: state.settings.muteLogChannelId,
         mute_log_mode: state.settings.muteLogMode,
-        audit_log_access: state.settings.auditLogAccess,
       });
     } else {
       await db.createGuildLogSettings({
@@ -331,7 +318,6 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         muteLogEnabled: state.settings.muteLogEnabled,
         muteLogChannelId: state.settings.muteLogChannelId,
         muteLogMode: state.settings.muteLogMode,
-        auditLogAccess: state.settings.auditLogAccess,
       });
     }
 
