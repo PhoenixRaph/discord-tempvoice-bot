@@ -11,7 +11,10 @@ import db from '../database/db';
 export async function handleVoiceControl(interaction: ButtonInteraction) {
   if (!interaction.guild || !interaction.member) return;
 
-  const channel = interaction.guild.channels.cache.get(interaction.channelId);
+  const channelId = interaction.channelId;
+  if (!channelId) return;
+
+  const channel = interaction.guild.channels.cache.get(channelId);
   if (!channel?.isVoiceBased() || !(channel instanceof VoiceChannel)) return;
 
   const tempChannel = await db.findTempChannel(channel.id);
@@ -34,7 +37,10 @@ export async function handleVoiceControl(interaction: ButtonInteraction) {
 export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
   if (!interaction.guild || !interaction.member) return;
 
-  const channel = interaction.guild.channels.cache.get(interaction.channelId);
+  const channelId = interaction.channelId;
+  if (!channelId) return;
+
+  const channel = interaction.guild.channels.cache.get(channelId);
   if (!channel?.isVoiceBased() || !(channel instanceof VoiceChannel)) return;
 
   const tempChannel = await db.findTempChannel(channel.id);
