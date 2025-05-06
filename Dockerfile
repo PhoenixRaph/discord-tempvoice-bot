@@ -3,8 +3,8 @@ FROM oven/bun:1 as builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lockb ./
+# Copy package.json first
+COPY package.json ./
 
 # Install dependencies
 RUN bun install
@@ -19,8 +19,8 @@ FROM oven/bun:1 as runner
 
 WORKDIR /app
 
-# Copy package files and install production dependencies
-COPY package.json bun.lockb ./
+# Copy package.json and install production dependencies
+COPY package.json ./
 RUN bun install --production
 
 # Copy built files from builder
