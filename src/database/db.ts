@@ -98,10 +98,10 @@ export async function findSettings(
   creatorChannelId: string,
 ): Promise<TempVoiceSettings | undefined> {
   try {
-    const result = await getAsync(
+    const result = (await getAsync(
       'SELECT * FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
       [guildId, creatorChannelId],
-    ) as TempVoiceSettings | undefined;
+    )) as TempVoiceSettings | undefined;
     return result;
   } catch (error) {
     const dbError = error as DatabaseError;
