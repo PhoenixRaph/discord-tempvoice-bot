@@ -3,7 +3,6 @@ import {
   createChannelSettingsModal,
   createVoiceChannelControls,
 } from '../components/VoiceChannelComponents';
-import { ButtonStyle } from 'discord.js';
 
 describe('VoiceChannelComponents', () => {
   test('createVoiceChannelControls creates correct number of buttons', () => {

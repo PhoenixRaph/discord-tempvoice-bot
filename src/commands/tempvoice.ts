@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, ChannelType, SlashCommandSubcommandsOnlyBuilder } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+  ChannelType,
+  SlashCommandSubcommandsOnlyBuilder,
+} from 'discord.js';
 import { handleSetupCommand } from '../handlers/setupHandler';
 import { handleLogSetupCommand } from '../handlers/logSetupHandler';
 import db from '../database/db';

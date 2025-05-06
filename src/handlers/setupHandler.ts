@@ -3,9 +3,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
-  ChannelType,
   ButtonInteraction,
-  StringSelectMenuInteraction,
   ModalSubmitInteraction,
   ChatInputCommandInteraction,
 } from 'discord.js';
@@ -14,8 +12,6 @@ import db from '../database/db';
 import {
   createSetupEmbed,
   createSetupActionRow,
-  createCategorySelect,
-  createPermissionsSelect,
   createActionButtons,
 } from '../components/SetupComponents';
 

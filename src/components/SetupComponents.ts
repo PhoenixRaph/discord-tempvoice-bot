@@ -4,7 +4,6 @@ import {
   StringSelectMenuBuilder,
   ButtonStyle,
   EmbedBuilder,
-  ChannelType,
 } from 'discord.js';
 
 export function createSetupEmbed() {

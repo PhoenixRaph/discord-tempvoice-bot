@@ -4,7 +4,6 @@ import {
   StringSelectMenuBuilder,
   ButtonStyle,
   EmbedBuilder,
-  ChannelType,
   StringSelectMenuOptionBuilder,
 } from 'discord.js';
 import { GuildLogSettings, LogFilter } from '../database/types';

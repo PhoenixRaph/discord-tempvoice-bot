@@ -1,8 +1,6 @@
 import {
   ButtonInteraction,
   ModalSubmitInteraction,
-  ChannelType,
-  GuildMember,
   VoiceChannel,
 } from 'discord.js';
 import { createChannelSettingsModal } from '../components/VoiceChannelComponents';
