@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import { randomUUID } from 'crypto';
 import db from '../database/db';
-import { GuildLogSettings, LogFilter } from '../database/types';
+import { LogFilter } from '../database/types';
 import {
   createLogSetupEmbed,
   createLogTypeSelect,
@@ -48,19 +48,18 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
     currentType: null,
     settings: {
       botLogEnabled: existingSettings?.bot_log_enabled ?? false,
-      botLogChannelId: existingSettings?.bot_log_channel_id,
+      botLogChannelId: existingSettings?.bot_log_channel_id ?? null,
       tempChannelLogEnabled: existingSettings?.temp_channel_log_enabled ?? false,
-      tempChannelLogChannelId: existingSettings?.temp_channel_log_channel_id,
+      tempChannelLogChannelId: existingSettings?.temp_channel_log_channel_id ?? null,
       moveLogEnabled: existingSettings?.move_log_enabled ?? false,
-      moveLogChannelId: existingSettings?.move_log_channel_id,
+      moveLogChannelId: existingSettings?.move_log_channel_id ?? null,
       moveLogMode: existingSettings?.move_log_mode ?? 'simple',
       muteLogEnabled: existingSettings?.mute_log_enabled ?? false,
-      muteLogChannelId: existingSettings?.mute_log_channel_id,
+      muteLogChannelId: existingSettings?.mute_log_channel_id ?? null,
       muteLogMode: existingSettings?.mute_log_mode ?? 'simple',
     },
     filters: {
       ban_actions: existingFilters?.ban_actions ?? true,
-      unban_actions: existingFilters?.unban_actions ?? true,
       kick_actions: existingFilters?.kick_actions ?? true,
       channel_deletions: existingFilters?.channel_deletions ?? true,
       channel_creations: existingFilters?.channel_creations ?? true,
@@ -75,13 +74,17 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
       id: '',
       guild_id: interaction.guild.id,
       bot_log_enabled: false,
+      bot_log_channel_id: null,
       temp_channel_log_enabled: false,
+      temp_channel_log_channel_id: null,
       move_log_enabled: false,
+      move_log_channel_id: null,
       move_log_mode: 'simple',
       mute_log_enabled: false,
+      mute_log_channel_id: null,
       mute_log_mode: 'simple',
-      created_at: new Date(),
-      updated_at: new Date(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
   );
   const typeSelect = createLogTypeSelect();
@@ -178,7 +181,6 @@ export async function handleLogButton(interaction: ButtonInteraction) {
 
     case 'toggle_ban_actions':
       state.filters.ban_actions = !state.filters.ban_actions;
-      state.filters.unban_actions = !state.filters.unban_actions;
       setupCache.set(interaction.guild.id, state);
       await updateLogSetupMessage(interaction);
       break;
@@ -260,13 +262,17 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
       id: '',
       guild_id: interaction.guild!.id,
       bot_log_enabled: false,
+      bot_log_channel_id: null,
       temp_channel_log_enabled: false,
+      temp_channel_log_channel_id: null,
       move_log_enabled: false,
+      move_log_channel_id: null,
       move_log_mode: 'simple',
       mute_log_enabled: false,
+      mute_log_channel_id: null,
       mute_log_mode: 'simple',
-      created_at: new Date(),
-      updated_at: new Date(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
   );
 
@@ -294,14 +300,14 @@ async function saveLogSettings(interaction: ButtonInteraction) {
     if (existingSettings) {
       await db.updateGuildLogSettings(interaction.guild!.id, {
         bot_log_enabled: state.settings.botLogEnabled,
-        bot_log_channel_id: state.settings.botLogChannelId,
+        bot_log_channel_id: state.settings.botLogChannelId ?? undefined,
         temp_channel_log_enabled: state.settings.tempChannelLogEnabled,
-        temp_channel_log_channel_id: state.settings.tempChannelLogChannelId,
+        temp_channel_log_channel_id: state.settings.tempChannelLogChannelId ?? undefined,
         move_log_enabled: state.settings.moveLogEnabled,
-        move_log_channel_id: state.settings.moveLogChannelId,
+        move_log_channel_id: state.settings.moveLogChannelId ?? undefined,
         move_log_mode: state.settings.moveLogMode,
         mute_log_enabled: state.settings.muteLogEnabled,
-        mute_log_channel_id: state.settings.muteLogChannelId,
+        mute_log_channel_id: state.settings.muteLogChannelId ?? undefined,
         mute_log_mode: state.settings.muteLogMode,
       });
     } else {
@@ -309,14 +315,14 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         id: randomUUID(),
         guildId: interaction.guild!.id,
         botLogEnabled: state.settings.botLogEnabled,
-        botLogChannelId: state.settings.botLogChannelId,
+        botLogChannelId: state.settings.botLogChannelId ?? undefined,
         tempChannelLogEnabled: state.settings.tempChannelLogEnabled,
-        tempChannelLogChannelId: state.settings.tempChannelLogChannelId,
+        tempChannelLogChannelId: state.settings.tempChannelLogChannelId ?? undefined,
         moveLogEnabled: state.settings.moveLogEnabled,
-        moveLogChannelId: state.settings.moveLogChannelId,
+        moveLogChannelId: state.settings.moveLogChannelId ?? undefined,
         moveLogMode: state.settings.moveLogMode,
         muteLogEnabled: state.settings.muteLogEnabled,
-        muteLogChannelId: state.settings.muteLogChannelId,
+        muteLogChannelId: state.settings.muteLogChannelId ?? undefined,
         muteLogMode: state.settings.muteLogMode,
       });
     }

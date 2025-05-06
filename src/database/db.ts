@@ -15,16 +15,16 @@ const db = new sqlite3.Database(join(process.cwd(), 'data.db'));
 
 // Promisify run and get methods with proper typing
 type SqliteGet = {
-  (sql: string, params: any[]): Promise<any>;
-  (sql: string): Promise<any>;
+  (sql: string, params: unknown[]): Promise<unknown>;
+  (sql: string): Promise<unknown>;
 };
 type SqliteRun = {
-  (sql: string, params: any[]): Promise<RunResult>;
-  (sql: string): Promise<RunResult>;
+  (sql: string, params: unknown[]): Promise<sqlite3.RunResult>;
+  (sql: string): Promise<sqlite3.RunResult>;
 };
 type SqliteAll = {
-  (sql: string, params: any[]): Promise<any[]>;
-  (sql: string): Promise<any[]>;
+  (sql: string, params: unknown[]): Promise<unknown[]>;
+  (sql: string): Promise<unknown[]>;
 };
 
 const runAsync = promisify(db.run).bind(db) as SqliteRun;
@@ -93,12 +93,15 @@ await runAsync(`
   )
 `);
 
-export async function findSettings(guildId: string, creatorChannelId: string): Promise<TempVoiceSettings | undefined> {
+export async function findSettings(
+  guildId: string,
+  creatorChannelId: string,
+): Promise<TempVoiceSettings | undefined> {
   try {
     const result = await getAsync(
       'SELECT * FROM temp_voice_settings WHERE guild_id = ? AND creator_channel_id = ?',
       [guildId, creatorChannelId],
-    );
+    ) as TempVoiceSettings | undefined;
     return result;
   } catch (error) {
     const dbError = error as DatabaseError;
@@ -110,7 +113,14 @@ export async function createSettings(settings: TempVoiceSettings): Promise<Datab
   try {
     const result = await runAsync(
       'INSERT INTO temp_voice_settings (id, guild_id, creator_channel_id, default_name, default_slots, default_bitrate) VALUES (?, ?, ?, ?, ?, ?)',
-      [settings.id, settings.guild_id, settings.creator_channel_id, settings.default_name, settings.default_slots, settings.default_bitrate],
+      [
+        settings.id,
+        settings.guild_id,
+        settings.creator_channel_id,
+        settings.default_name,
+        settings.default_slots,
+        settings.default_bitrate,
+      ],
     );
     return result;
   } catch (error) {
@@ -201,7 +211,7 @@ export async function createGuildLogSettings(data: {
 
 export async function updateGuildLogSettings(guildId: string, data: Partial<GuildLogSettings>) {
   const updates: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   Object.entries(data).forEach(([key, value]) => {
     if (key !== 'id' && key !== 'guild_id' && key !== 'created_at' && key !== 'updated_at') {
@@ -227,7 +237,7 @@ export async function getLogFilters(guildId: string): Promise<LogFilter | null> 
 
 export async function updateLogFilters(guildId: string, filters: Partial<LogFilter>) {
   const updates: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   Object.entries(filters).forEach(([key, value]) => {
     if (key !== 'guild_id') {
