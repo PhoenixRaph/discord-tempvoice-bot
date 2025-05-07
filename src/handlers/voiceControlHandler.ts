@@ -15,7 +15,7 @@ export async function handleVoiceControl(interaction: ButtonInteraction) {
   if (!tempChannel || tempChannel.owner_id !== interaction.user.id) {
     await interaction.reply({
       content: 'Du hast keine Berechtigung, diesen Kanal zu verwalten.',
-      ephemeral: true,
+      flags: ['Ephemeral']
     });
     return;
   }
@@ -41,7 +41,7 @@ export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
   if (!tempChannel || tempChannel.owner_id !== interaction.user.id) {
     await interaction.reply({
       content: 'Du hast keine Berechtigung, diesen Kanal zu verwalten.',
-      ephemeral: true,
+      flags: ['Ephemeral']
     });
     return;
   }
@@ -53,7 +53,7 @@ export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
     if (isNaN(newLimit) || newLimit < 0 || newLimit > 99) {
       await interaction.reply({
         content: 'Bitte gib eine gültige Zahl zwischen 0 und 99 ein.',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
       return;
     }
@@ -66,13 +66,13 @@ export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
 
       await interaction.reply({
         content: 'Einstellungen wurden erfolgreich aktualisiert!',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
     } catch (error) {
       console.error('Fehler beim Aktualisieren der Kanaleinstellungen:', error);
       await interaction.reply({
         content: 'Es ist ein Fehler beim Aktualisieren der Einstellungen aufgetreten.',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
     }
   }

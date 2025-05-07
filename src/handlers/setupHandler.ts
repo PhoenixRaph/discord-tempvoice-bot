@@ -11,8 +11,9 @@ import { randomUUID } from 'crypto';
 import db from '../database/db';
 import {
   createSetupEmbed,
-  createSetupActionRow,
   createActionButtons,
+  createVoiceChannelSelect,
+  createCategorySelect,
 } from '../components/SetupComponents';
 
 // Temporärer Speicher für Setup-Prozess
@@ -29,6 +30,14 @@ interface SetupState {
 
 const setupCache = new Map<string, SetupState>();
 
+// Erstelle einen Standard-State
+const defaultState = {
+  position: 'top' as const,
+  defaultName: '',
+  defaultSlots: 0,
+  defaultBitrate: 64000,
+};
+
 export async function handleSetupCommand(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild) return;
 
@@ -40,7 +49,7 @@ export async function handleSetupCommand(interaction: ChatInputCommandInteractio
   if (existingSettings) {
     await interaction.reply({
       content: 'Dieser Kanal ist bereits als Voice-Channel Creator konfiguriert.',
-      ephemeral: true,
+      flags: ['Ephemeral']
     });
     return;
   }
@@ -57,14 +66,14 @@ export async function handleSetupCommand(interaction: ChatInputCommandInteractio
     },
   });
 
-  const embed = createSetupEmbed();
-  const actionRow = createSetupActionRow();
+  const embed = createSetupEmbed(defaultState);
+  const actionRow = createActionButtons();
   const actionButtons = createActionButtons();
 
   await interaction.reply({
     embeds: [embed],
     components: [actionRow, actionButtons],
-    ephemeral: true,
+    flags: ['Ephemeral']
   });
 }
 
@@ -92,13 +101,13 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
 
         await interaction.reply({
           content: 'Voice-Channel Creator wurde erfolgreich eingerichtet!',
-          ephemeral: true,
+          flags: ['Ephemeral']
         });
       } catch (error) {
         console.error('Fehler beim Speichern der Einstellungen:', error);
         await interaction.reply({
           content: 'Es ist ein Fehler beim Speichern der Einstellungen aufgetreten.',
-          ephemeral: true,
+          flags: ['Ephemeral']
         });
       }
       break;
@@ -154,7 +163,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
       setupCache.delete(interaction.guild.id);
       await interaction.reply({
         content: 'Setup wurde abgebrochen.',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
       break;
   }
@@ -175,7 +184,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
     if (isNaN(newLimit) || newLimit < 0 || newLimit > 99) {
       await interaction.reply({
         content: 'Bitte gib eine gültige Zahl zwischen 0 und 99 für das Nutzerlimit ein.',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
       return;
     }
@@ -183,7 +192,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
     if (isNaN(newBitrate) || newBitrate < 8 || newBitrate > 384) {
       await interaction.reply({
         content: 'Bitte gib eine gültige Bitrate zwischen 8 und 384 ein.',
-        ephemeral: true,
+        flags: ['Ephemeral']
       });
       return;
     }
@@ -197,14 +206,14 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
 
     setupCache.set(interaction.guild.id, state);
 
-    const embed = createSetupEmbed();
-    const actionRow = createSetupActionRow();
+    const embed = createSetupEmbed(defaultState);
+    const actionRow = createActionButtons();
     const actionButtons = createActionButtons();
 
     await interaction.reply({
       embeds: [embed],
       components: [actionRow, actionButtons],
-      ephemeral: true,
+      flags: ['Ephemeral']
     });
   }
 }

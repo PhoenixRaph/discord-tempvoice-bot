@@ -92,7 +92,7 @@ export async function handleLogSetupCommand(interaction: ChatInputCommandInterac
   await interaction.reply({
     embeds: [embed],
     components: [typeSelect],
-    ephemeral: true,
+    flags: ['Ephemeral'],
   });
 }
 
@@ -152,10 +152,22 @@ export async function handleLogSelectMenu(interaction: StringSelectMenuInteracti
 }
 
 export async function handleLogButton(interaction: ButtonInteraction) {
-  if (!interaction.guild) return;
+  console.log('\n=== handleLogButton Start ===');
+  console.log('Button ID:', interaction.customId);
+  console.log('Guild ID:', interaction.guild?.id);
+
+  if (!interaction.guild) {
+    console.error('❌ No guild found in interaction');
+    return;
+  }
 
   const state = setupCache.get(interaction.guild.id);
-  if (!state) return;
+  if (!state) {
+    console.error('❌ No state found in cache for guild:', interaction.guild.id);
+    return;
+  }
+
+  console.log('Current state:', JSON.stringify(state, null, 2));
 
   switch (interaction.customId) {
     case 'toggle_log':
@@ -180,7 +192,31 @@ export async function handleLogButton(interaction: ButtonInteraction) {
       break;
 
     case 'save_settings':
-      await saveLogSettings(interaction);
+      console.log('🔄 Processing save_settings button...');
+      try {
+        // Sofortige Antwort an Discord
+        console.log('Attempting to defer update...');
+        await interaction.deferUpdate();
+        console.log('✅ Update deferred successfully');
+        
+        // Speichere die Einstellungen
+        console.log('Calling saveLogSettings...');
+        await saveLogSettings(interaction);
+        console.log('✅ saveLogSettings completed');
+      } catch (error) {
+        console.error('❌ Error in save_settings button handler:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+          console.error('Error stack:', error.stack);
+        }
+        try {
+          await interaction.editReply({
+            content: '❌ Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+          });
+        } catch (replyError) {
+          console.error('❌ Failed to send error message:', replyError);
+        }
+      }
       break;
 
     case 'toggle_ban_actions':
@@ -210,6 +246,7 @@ export async function handleLogButton(interaction: ButtonInteraction) {
       await updateLogSetupMessage(interaction);
       break;
   }
+  console.log('=== handleLogButton End ===\n');
 }
 
 async function updateLogSetupMessage(interaction: ButtonInteraction | StringSelectMenuInteraction) {
@@ -292,19 +329,60 @@ async function updateLogSetupMessage(interaction: ButtonInteraction | StringSele
     }
   } catch (error) {
     console.error('Fehler beim Aktualisieren der Nachricht:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
   }
 }
 
 async function saveLogSettings(interaction: ButtonInteraction) {
-  const state = setupCache.get(interaction.guild!.id);
-  if (!state || !state.currentType) return;
+  console.log('\n=== Starting saveLogSettings ===');
+  console.log('Interaction ID:', interaction.id);
+  console.log('Guild ID:', interaction.guild?.id);
+  
+  if (!interaction.guild) {
+    console.error('\n❌ ERROR: No guild found in interaction');
+    return;
+  }
+
+  const state = setupCache.get(interaction.guild.id);
+  if (!state) {
+    console.error('\n❌ ERROR: No state found in cache for guild:', interaction.guild.id);
+    return;
+  }
+
+  if (!state.currentType) {
+    console.error('\n❌ ERROR: No current type in state for guild:', interaction.guild.id);
+    return;
+  }
 
   try {
+    console.log('\n📝 Current state:', JSON.stringify(state, null, 2));
+    
     // Erstelle oder aktualisiere die Einstellungen
-    const existingSettings = await db.getGuildLogSettings(interaction.guild!.id);
+    console.log('\n🔍 Fetching existing settings from database...');
+    const existingSettings = await db.getGuildLogSettings(interaction.guild.id);
+    console.log('\n📋 Existing settings from database:', JSON.stringify(existingSettings, null, 2));
+
+    const settingsData = {
+      botLogEnabled: state.settings.botLogEnabled,
+      botLogChannelId: state.settings.botLogChannelId ?? undefined,
+      tempChannelLogEnabled: state.settings.tempChannelLogEnabled,
+      tempChannelLogChannelId: state.settings.tempChannelLogChannelId ?? undefined,
+      moveLogEnabled: state.settings.moveLogEnabled,
+      moveLogChannelId: state.settings.moveLogChannelId ?? undefined,
+      moveLogMode: state.settings.moveLogMode,
+      muteLogEnabled: state.settings.muteLogEnabled,
+      muteLogChannelId: state.settings.muteLogChannelId ?? undefined,
+      muteLogMode: state.settings.muteLogMode,
+    };
+
+    console.log('\n💾 Preparing settings data:', JSON.stringify(settingsData, null, 2));
 
     if (existingSettings) {
-      await db.updateGuildLogSettings(interaction.guild!.id, {
+      console.log('\n🔄 Updating existing settings...');
+      const updateData = {
         bot_log_enabled: state.settings.botLogEnabled,
         bot_log_channel_id: state.settings.botLogChannelId ?? undefined,
         temp_channel_log_enabled: state.settings.tempChannelLogEnabled,
@@ -315,36 +393,97 @@ async function saveLogSettings(interaction: ButtonInteraction) {
         mute_log_enabled: state.settings.muteLogEnabled,
         mute_log_channel_id: state.settings.muteLogChannelId ?? undefined,
         mute_log_mode: state.settings.muteLogMode,
-      });
+      };
+      console.log('📤 Update data to be sent:', JSON.stringify(updateData, null, 2));
+      try {
+        console.log('Attempting to update settings in database...');
+        await db.updateGuildLogSettings(interaction.guild.id, updateData);
+        console.log('✅ Settings updated successfully in database');
+      } catch (dbError) {
+        console.error('❌ Database update error:', dbError);
+        if (dbError instanceof Error) {
+          console.error('Error message:', dbError.message);
+          console.error('Error stack:', dbError.stack);
+        }
+        throw dbError;
+      }
     } else {
-      await db.createGuildLogSettings({
+      console.log('\n➕ Creating new settings...');
+      const createData = {
         id: randomUUID(),
-        guildId: interaction.guild!.id,
-        botLogEnabled: state.settings.botLogEnabled,
-        botLogChannelId: state.settings.botLogChannelId ?? undefined,
-        tempChannelLogEnabled: state.settings.tempChannelLogEnabled,
-        tempChannelLogChannelId: state.settings.tempChannelLogChannelId ?? undefined,
-        moveLogEnabled: state.settings.moveLogEnabled,
-        moveLogChannelId: state.settings.moveLogChannelId ?? undefined,
-        moveLogMode: state.settings.moveLogMode,
-        muteLogEnabled: state.settings.muteLogEnabled,
-        muteLogChannelId: state.settings.muteLogChannelId ?? undefined,
-        muteLogMode: state.settings.muteLogMode,
-      });
+        guildId: interaction.guild.id,
+        ...settingsData,
+      };
+      console.log('📤 Create data to be sent:', JSON.stringify(createData, null, 2));
+      try {
+        console.log('Attempting to create settings in database...');
+        await db.createGuildLogSettings(createData);
+        console.log('✅ New settings created successfully in database');
+      } catch (dbError) {
+        console.error('❌ Database create error:', dbError);
+        if (dbError instanceof Error) {
+          console.error('Error message:', dbError.message);
+          console.error('Error stack:', dbError.stack);
+        }
+        throw dbError;
+      }
     }
 
     // Aktualisiere die Filter
-    await db.updateLogFilters(interaction.guild!.id, state.filters);
+    console.log('\n🔍 Preparing to save filters:', JSON.stringify(state.filters, null, 2));
+    try {
+      console.log('Attempting to update filters in database...');
+      await db.updateLogFilters(interaction.guild.id, state.filters);
+      console.log('✅ Filters updated successfully in database');
+    } catch (filterError) {
+      console.error('\n❌ ERROR: Failed to save filters:', filterError);
+      if (filterError instanceof Error) {
+        console.error('Error details:', filterError.message);
+        console.error('Error stack:', filterError.stack);
+      }
+      throw filterError;
+    }
 
-    await interaction.reply({
-      content: 'Die Einstellungen wurden erfolgreich gespeichert!',
-      ephemeral: true,
-    });
+    // Lösche den Cache nach erfolgreichem Speichern
+    setupCache.delete(interaction.guild.id);
+    console.log('\n🗑️ Cache cleared');
+
+    // Sende die Erfolgsmeldung
+    try {
+      console.log('Attempting to send success message...');
+      await interaction.editReply({
+        content: '✅ Die Einstellungen wurden erfolgreich gespeichert!',
+      });
+      console.log('✅ Success message sent');
+    } catch (replyError) {
+      console.error('\n❌ ERROR: Failed to send success message:', replyError);
+      if (replyError instanceof Error) {
+        console.error('Error details:', replyError.message);
+        console.error('Error stack:', replyError.stack);
+      }
+    }
   } catch (error) {
-    console.error('Fehler beim Speichern der Log-Einstellungen:', error);
-    await interaction.reply({
-      content: 'Es ist ein Fehler beim Speichern der Einstellungen aufgetreten.',
-      ephemeral: true,
-    });
+    console.error('\n❌ ERROR: Failed to save log settings:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
+    // Sende die Fehlermeldung
+    try {
+      console.log('Attempting to send error message...');
+      await interaction.editReply({
+        content: '❌ Es ist ein Fehler beim Speichern der Einstellungen aufgetreten. Bitte versuchen Sie es erneut.',
+      });
+      console.log('✅ Error message sent');
+    } catch (replyError) {
+      console.error('\n❌ ERROR: Failed to send error message:', replyError);
+      if (replyError instanceof Error) {
+        console.error('Error details:', replyError.message);
+        console.error('Error stack:', replyError.stack);
+      }
+    }
   }
+  
+  console.log('\n=== Finished saveLogSettings ===\n');
 }

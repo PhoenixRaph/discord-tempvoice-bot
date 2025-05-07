@@ -2,9 +2,11 @@ export interface TempVoiceSettings {
   id: string;
   guild_id: string;
   creator_channel_id: string;
+  category_id?: string;
   default_name: string;
   default_slots: number;
   default_bitrate: number;
+  allowed_actions?: string;
   created_at: string;
   updated_at: string;
 }

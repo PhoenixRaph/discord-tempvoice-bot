@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   Client,
   GatewayIntentBits,
@@ -9,11 +10,17 @@ import {
 } from 'discord.js';
 import { registerCommands } from './utils/registerCommands';
 import { handleTempVoice } from './handlers/tempVoiceHandler';
-import { handleButtonInteraction, handleModalSubmit } from './handlers/setupHandler';
+import { handleButtonInteraction as handleSetupButton, handleModalSubmit as handleSetupModal } from './handlers/setupHandler';
 import { handleVoiceControl, handleSettingsModal } from './handlers/voiceControlHandler';
 import { handleLogButton, handleLogSelectMenu } from './handlers/logSetupHandler';
 import { createPermissionErrorEmbed, checkBotPermissions } from './utils/permissionUtils';
-import { command as tempVoiceCommand } from './commands/tempvoice';
+import { 
+  command as tempVoiceCommand, 
+  handleButtonInteraction, 
+  handleModalSubmit, 
+  handleSelectMenuInteraction 
+} from './commands/tempvoice';
+import { command as dbtestCommand } from './commands/dbtest';
 
 // Create Discord client
 const client = new Client({
@@ -23,10 +30,17 @@ const client = new Client({
 // Initialize commands collection
 client.commands = new Collection();
 client.commands.set(tempVoiceCommand.data.name, tempVoiceCommand);
+client.commands.set(dbtestCommand.data.name, dbtestCommand);
 
 // Command handling
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   try {
+    console.log('\n=== InteractionCreate Event ===');
+    console.log('Interaction Type:', interaction.type);
+    if (interaction.isButton()) {
+      console.log('Button ID:', interaction.customId);
+    }
+
     // Prüfe Berechtigungen vor der Ausführung
     if (interaction.guild) {
       const requiredPermissions = [
@@ -75,45 +89,64 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
       await command.execute(interaction);
     } else if (interaction.isButton()) {
-      // Unterscheide zwischen Setup-, Voice-Control- und Log-Setup-Buttons
+      console.log('Processing button interaction...');
+      console.log('Button ID:', interaction.customId);
+      
       if (
-        interaction.customId.startsWith('channel_') ||
-        interaction.customId.startsWith('transfer_') ||
-        interaction.customId.startsWith('kick_') ||
-        interaction.customId.startsWith('toggle_')
+        interaction.customId === 'new_config' ||
+        interaction.customId === 'position_toggle' ||
+        interaction.customId === 'edit_settings' ||
+        interaction.customId === 'delete_config' ||
+        interaction.customId === 'next_page' ||
+        interaction.customId === 'toggle_nsfw' ||
+        interaction.customId === 'finish_setup'
       ) {
-        if (
-          interaction.customId === 'toggle_log' ||
-          interaction.customId === 'toggle_ban_actions' ||
-          interaction.customId === 'toggle_kick_actions' ||
-          interaction.customId === 'toggle_channel_actions' ||
-          interaction.customId === 'toggle_owner_actions' ||
-          interaction.customId === 'save_settings'
-        ) {
-          await handleLogButton(interaction);
-        } else {
-          await handleVoiceControl(interaction);
-        }
-      } else {
+        console.log('Routing to handleButtonInteraction...');
         await handleButtonInteraction(interaction);
+      } else {
+        console.log('⚠️ Unbekannter Button:', interaction.customId);
       }
     } else if (interaction.isStringSelectMenu()) {
+      console.log('Processing select menu interaction...');
+      console.log('Select Menu ID:', interaction.customId);
+      console.log('Selected Values:', interaction.values);
+      
       if (
         interaction.customId === 'log_type_select' ||
         interaction.customId === 'log_channel_select' ||
         interaction.customId === 'log_mode_select'
       ) {
+        console.log('Routing to handleLogSelectMenu...');
         await handleLogSelectMenu(interaction);
+      } else if (
+        interaction.customId === 'voice_channel_select' ||
+        interaction.customId === 'category_select' ||
+        interaction.customId === 'channel_actions_select' ||
+        interaction.customId === 'config_select'
+      ) {
+        console.log('Routing to handleSelectMenuInteraction...');
+        await handleSelectMenuInteraction(interaction);
+      } else {
+        console.log('⚠️ Unbekanntes Select Menu:', interaction.customId);
       }
     } else if (interaction.isModalSubmit()) {
-      if (interaction.customId === 'channel_settings_modal') {
-        await handleSettingsModal(interaction);
-      } else {
+      console.log('Processing modal submit...');
+      console.log('Modal ID:', interaction.customId);
+      
+      if (interaction.customId === 'settings_modal') {
+        console.log('Routing to tempvoice handleModalSubmit...');
         await handleModalSubmit(interaction);
+      } else {
+        console.log('Routing to setupHandler handleModalSubmit...');
+        await handleSetupModal(interaction);
       }
     }
   } catch (error) {
     console.error('Fehler bei der Verarbeitung der Interaktion:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
 
     if (interaction.isRepliable()) {
       // Spezifische Fehlerbehandlung für verschiedene Fehlertypen
@@ -194,10 +227,29 @@ client.on(Events.VoiceStateUpdate, handleTempVoice);
 
 // Client ready event
 client.once(Events.ClientReady, async (c) => {
-  console.log(`Bereit! Eingeloggt als ${c.user.tag}`);
+  console.log(`🤖 Bereit! Eingeloggt als ${c.user.tag}`);
 
   // Register slash commands
   await registerCommands();
+
+  // Ausgabe aller geladenen Commands
+  console.log('\n📋 Geladene Slash-Commands:');
+  client.commands.forEach((cmd, name) => {
+    const desc = cmd.data?.description || cmd.data?.toJSON?.().description || '';
+    console.log(`  └─ /${name}: ${desc}`);
+  });
+
+  // Datenbank-Status prüfen
+  try {
+    // Beispiel: Teste, ob die Tabelle test_entries existiert
+    const db = (await import('./database/db')).default;
+    await db.runAsync('SELECT 1 FROM test_entries LIMIT 1');
+    console.log('\n💾 Datenbank-Status:');
+    console.log('  └─ ✅ Verbindung und Tabellen sind OK');
+  } catch (err) {
+    console.error('\n💾 Datenbank-Status:');
+    console.error('  └─ ❌ Fehler bei der Datenbankprüfung:', err);
+  }
 });
 
 // Error handling
