@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ButtonInteraction, StringSelectMenuInteraction, ModalSubmitInteraction, MessageComponentInteraction, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ButtonInteraction, StringSelectMenuInteraction, ModalSubmitInteraction, MessageComponentInteraction, CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../types/Command';
 import {
   createSetupEmbed,
@@ -39,6 +39,24 @@ export const command: Command = {
     if (!interaction.guild) {
       await interaction.reply({
         content: 'Dieser Befehl kann nur in einem Server verwendet werden.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    // Check if user is administrator or server owner
+    const member = interaction.guild.members.cache.get(interaction.user.id);
+    if (!member) {
+      await interaction.reply({
+        content: 'Du musst ein Mitglied des Servers sein, um diesen Befehl zu verwenden.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    if (!member.permissions.has(PermissionFlagsBits.Administrator) && interaction.guild.ownerId !== interaction.user.id) {
+      await interaction.reply({
+        content: 'Du benötigst Administratorrechte oder musst der Serverbesitzer sein, um diesen Befehl zu verwenden.',
         ephemeral: true
       });
       return;

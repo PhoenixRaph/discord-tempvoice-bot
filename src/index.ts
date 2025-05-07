@@ -21,6 +21,7 @@ import {
   handleSelectMenuInteraction 
 } from './commands/tempvoice';
 import { command as dbtestCommand } from './commands/dbtest';
+import db from './database/db';
 
 // Create Discord client
 const client = new Client({
@@ -103,6 +104,14 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       ) {
         console.log('Routing to handleButtonInteraction...');
         await handleButtonInteraction(interaction);
+      } else if (
+        interaction.customId === 'channel_settings' ||
+        interaction.customId === 'transfer_owner' ||
+        interaction.customId === 'kick_user' ||
+        interaction.customId === 'toggle_user'
+      ) {
+        console.log('Routing to handleVoiceControl...');
+        await handleVoiceControl(interaction);
       } else {
         console.log('⚠️ Unbekannter Button:', interaction.customId);
       }
@@ -136,6 +145,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       if (interaction.customId === 'settings_modal') {
         console.log('Routing to tempvoice handleModalSubmit...');
         await handleModalSubmit(interaction);
+      } else if (interaction.customId === 'channel_settings') {
+        console.log('Routing to voiceControlHandler handleSettingsModal...');
+        await handleSettingsModal(interaction);
       } else {
         console.log('Routing to setupHandler handleModalSubmit...');
         await handleSetupModal(interaction);
@@ -229,6 +241,38 @@ client.on(Events.VoiceStateUpdate, handleTempVoice);
 client.once(Events.ClientReady, async (c) => {
   console.log(`🤖 Bereit! Eingeloggt als ${c.user.tag}`);
 
+  // Cleanup orphaned temp channels
+  console.log('\n🧹 Starte Cleanup von temporären Channels...');
+  try {
+    const tempChannels = await db.getAllTempChannels();
+    console.log(`  └─ Gefundene temporäre Channels: ${tempChannels.length}`);
+
+    for (const tempChannel of tempChannels) {
+      try {
+        const guild = await c.guilds.fetch(tempChannel.guild_id);
+        const channel = await guild.channels.fetch(tempChannel.channel_id).catch(() => null);
+        
+        if (channel) {
+          // Prüfe ob der Channel leer ist
+          if (channel.type === 2 && channel.members.size === 0) {
+            console.log(`  └─ Lösche leeren Channel: ${channel.name}`);
+            await channel.delete();
+            await db.deleteTempChannel(tempChannel.channel_id);
+          }
+        } else {
+          // Channel existiert nicht mehr, lösche aus DB
+          console.log(`  └─ Channel existiert nicht mehr: ${tempChannel.channel_id}`);
+          await db.deleteTempChannel(tempChannel.channel_id);
+        }
+      } catch (error) {
+        console.error(`  └─ Fehler beim Verarbeiten von Channel ${tempChannel.channel_id}:`, error);
+      }
+    }
+    console.log('✅ Cleanup abgeschlossen');
+  } catch (error) {
+    console.error('❌ Fehler beim Cleanup:', error);
+  }
+
   // Register slash commands
   await registerCommands();
 
@@ -242,7 +286,6 @@ client.once(Events.ClientReady, async (c) => {
   // Datenbank-Status prüfen
   try {
     // Beispiel: Teste, ob die Tabelle test_entries existiert
-    const db = (await import('./database/db')).default;
     await db.runAsync('SELECT 1 FROM test_entries LIMIT 1');
     console.log('\n💾 Datenbank-Status:');
     console.log('  └─ ✅ Verbindung und Tabellen sind OK');

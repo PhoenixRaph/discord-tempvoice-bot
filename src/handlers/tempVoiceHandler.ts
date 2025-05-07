@@ -1,7 +1,7 @@
 import { VoiceState, ChannelType, PermissionFlagsBits } from 'discord.js';
 import { randomUUID } from 'crypto';
 import db from '../database/db';
-import { createVoiceChannelControls } from '../components/VoiceChannelComponents';
+import { createVoiceChannelControls, createVoiceChannelControlEmbed } from '../components/VoiceChannelComponents';
 
 export async function handleTempVoice(oldState: VoiceState, newState: VoiceState) {
   // Benutzer ist einem Voice-Channel beigetreten
@@ -39,17 +39,13 @@ export async function handleTempVoice(oldState: VoiceState, newState: VoiceState
         // Verschiebe den Benutzer in seinen neuen Channel
         await newState.setChannel(channel);
 
-        // Sende die Kontrollnachricht
-        const textChannel = channel.parent?.children.cache.find(
-          (ch) => ch.type === ChannelType.GuildText,
-        );
-
-        if (textChannel?.isTextBased()) {
-          await textChannel.send({
-            content: `Willkommen in deinem temporären Voice-Channel, ${newState.member?.toString()}!`,
-            components: [createVoiceChannelControls()],
-          });
-        }
+        // Sende die Kontrollnachricht in den Text-Channel des Voice-Channels
+        const allowedActions = settings.allowed_actions ? JSON.parse(settings.allowed_actions) : [];
+        await channel.send({
+          content: `${newState.member?.toString()} ist der Besitzer dieses temporären Voice-Channels!`,
+          embeds: [createVoiceChannelControlEmbed(allowedActions)],
+          components: [createVoiceChannelControls(allowedActions)],
+        });
 
         // Speichere den temporären Channel in der Datenbank
         await db.createTempChannel({
