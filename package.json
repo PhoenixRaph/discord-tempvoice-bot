@@ -1,6 +1,6 @@
 {
   "name": "discord-tempvoice-bot",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Discord.js bot with temporary voice channel functionality",
   "module": "src/index.ts",
   "type": "module",
