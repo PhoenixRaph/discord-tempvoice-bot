@@ -55,19 +55,17 @@ export function createSetupEmbed(state: SetupState) {
 export function createSetupEmbedPage2(state: SetupState) {
   const selectedActions = state.allowedActions || [];
   const actionEmojis: { [key: string]: string } = {
-    'edit_name': '✏️',
-    'edit_limit': '📏',
-    'transfer_owner': '📌',
-    'kick_user': '👢',
-    'ban_user': '🔨'
+    'edit_name': '⚙️',
+    'transfer_owner': '👑',
+    'kick_user': '📞',
+    'ban_user': '👤'
   };
 
   const actionLabels: { [key: string]: string } = {
-    'edit_name': 'Name bearbeiten',
-    'edit_limit': 'Limit bearbeiten',
-    'transfer_owner': 'Besitzer ändern',
+    'edit_name': 'Kanal Einstellungen (Name & Limit)',
+    'transfer_owner': 'Besitzer übertragen',
     'kick_user': 'Nutzer kicken',
-    'ban_user': 'Nutzer ent-/bannen'
+    'ban_user': 'Nutzer ent-/blocken'
   };
 
   const selectedActionsText = selectedActions.length > 0
@@ -192,33 +190,28 @@ export function createChannelActionsSelect() {
         .setCustomId('channel_actions_select')
         .setPlaceholder('Kanalaktionen auswählen...')
         .setMinValues(0)
-        .setMaxValues(5)
+        .setMaxValues(4)
         .addOptions([
           new StringSelectMenuOptionBuilder()
-            .setLabel('Name bearbeiten')
-            .setDescription('Erlaubt dem Owner den Kanalnamen zu ändern')
+            .setLabel('Kanal Einstellungen')
+            .setDescription('Erlaubt dem Owner Name und Limit zu ändern')
             .setValue('edit_name')
-            .setEmoji('✏️'),
+            .setEmoji('⚙️'),
           new StringSelectMenuOptionBuilder()
-            .setLabel('Limit bearbeiten')
-            .setDescription('Erlaubt dem Owner das Nutzerlimit zu ändern')
-            .setValue('edit_limit')
-            .setEmoji('📏'),
-          new StringSelectMenuOptionBuilder()
-            .setLabel('Besitzer ändern')
+            .setLabel('Besitzer übertragen')
             .setDescription('Erlaubt dem Owner die Besitzerschaft zu übertragen')
             .setValue('transfer_owner')
-            .setEmoji('📌'),
+            .setEmoji('👑'),
           new StringSelectMenuOptionBuilder()
             .setLabel('Nutzer kicken')
             .setDescription('Erlaubt dem Owner Nutzer aus dem Kanal zu kicken')
             .setValue('kick_user')
-            .setEmoji('👢'),
+            .setEmoji('📞'),
           new StringSelectMenuOptionBuilder()
-            .setLabel('Nutzer ent-/bannen')
+            .setLabel('Nutzer ent-/blocken')
             .setDescription('Erlaubt dem Owner Nutzer zu bannen/entbannen')
             .setValue('ban_user')
-            .setEmoji('🔨')
+            .setEmoji('👤')
         ])
     );
 }

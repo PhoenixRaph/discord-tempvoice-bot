@@ -17,6 +17,7 @@ export function createVoiceChannelControlEmbed(allowedActions: string[]) {
   };
 
   const enabledActions = allowedActions
+    .filter(action => actionDescriptions[action]) // Only show actions that have descriptions
     .map(action => `• ${actionDescriptions[action]}`)
     .join('\n');
 

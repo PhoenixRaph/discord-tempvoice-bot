@@ -253,8 +253,14 @@ export async function getAllTempChannels(): Promise<TempChannel[]> {
   return results as TempChannel[];
 }
 
-export async function deleteTempChannel(channelId: string): Promise<void> {
-  await runAsync('DELETE FROM temp_voice_channels WHERE id = ?', [channelId]);
+export async function deleteTempChannel(id: string) {
+  const query = 'DELETE FROM temp_voice_channels WHERE id = ?';
+  await runAsync(query, [id]);
+}
+
+export async function updateTempChannel(id: string, data: { ownerId: string }) {
+  const query = 'UPDATE temp_voice_channels SET owner_id = ? WHERE id = ?';
+  await runAsync(query, [data.ownerId, id]);
 }
 
 export async function getGuildLogSettings(guildId: string): Promise<GuildLogSettings | null> {
@@ -480,7 +486,9 @@ export default {
   deleteGuildSettings,
   createTempChannel,
   findTempChannel,
+  getAllTempChannels,
   deleteTempChannel,
+  updateTempChannel,
   getGuildLogSettings,
   createGuildLogSettings,
   updateGuildLogSettings,
@@ -491,5 +499,5 @@ export default {
   getAllConfigs,
   runAsync,
   getAsync,
-  getAllTempChannels,
+  allAsync,
 };

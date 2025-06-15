@@ -1,11 +1,9 @@
-import { ButtonInteraction, ModalSubmitInteraction, VoiceChannel, TextChannel, ChannelType } from 'discord.js';
+import { ButtonInteraction, ModalSubmitInteraction, VoiceChannel, TextChannel, ChannelType, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, MessageComponentInteraction, ButtonBuilder, ButtonStyle } from 'discord.js';
 import db from '../database/db';
 import { createChannelSettingsModal } from '../components/VoiceChannelComponents';
 
-export async function handleVoiceControl(interaction: ButtonInteraction) {
-  if (!interaction.isButton()) return;
-
-  console.log('Button interaction received:', interaction.customId);
+export async function handleVoiceControl(interaction: MessageComponentInteraction) {
+  console.log('Voice control interaction received:', interaction.customId);
   
   // Finde den zugehörigen Voice-Channel
   const textChannel = interaction.channel;
@@ -82,7 +80,7 @@ export async function handleVoiceControl(interaction: ButtonInteraction) {
   const requiredAction = actionMap[interaction.customId];
   console.log('Required action:', requiredAction);
 
-  if (!allowedActions.includes(requiredAction)) {
+  if (requiredAction && !allowedActions.includes(requiredAction)) {
     console.log('Action not allowed');
     await interaction.reply({
       content: 'Diese Aktion ist für diesen Channel nicht erlaubt.',
@@ -91,14 +89,241 @@ export async function handleVoiceControl(interaction: ButtonInteraction) {
     return;
   }
 
-  switch (interaction.customId) {
-    case 'channel_settings': {
-      console.log('Showing settings modal');
-      const modal = createChannelSettingsModal(voiceChannel.name || 'Temporärer Channel', voiceChannel.userLimit || 0);
-      await interaction.showModal(modal);
-      break;
+  if (interaction.isButton()) {
+    switch (interaction.customId) {
+      case 'channel_settings': {
+        console.log('Showing settings modal');
+        const modal = createChannelSettingsModal(voiceChannel.name || 'Temporärer Channel', voiceChannel.userLimit || 0);
+        await interaction.showModal(modal);
+        break;
+      }
+      case 'transfer_owner': {
+        console.log('Showing transfer owner select menu');
+        
+        // Get all members in the voice channel except the current owner
+        const members = voiceChannel.members.filter(member => member.id !== tempChannel.owner_id);
+        
+        if (members.size === 0) {
+          await interaction.reply({
+            content: 'Es sind keine anderen Benutzer im Voice-Channel.',
+            flags: ['Ephemeral']
+          });
+          return;
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('transfer_owner_select')
+          .setPlaceholder('Wähle den neuen Besitzer')
+          .addOptions(
+            members.map(member => 
+              new StringSelectMenuOptionBuilder()
+                .setLabel(member.displayName)
+                .setDescription(`ID: ${member.id}`)
+                .setValue(member.id)
+            )
+          );
+
+        await interaction.reply({
+          content: 'Wähle den neuen Besitzer des Channels:',
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)],
+          flags: ['Ephemeral']
+        });
+        break;
+      }
+      case 'kick_user': {
+        console.log('Showing kick user select menu');
+        
+        // Get all members in the voice channel except the current owner
+        const members = voiceChannel.members.filter(member => member.id !== tempChannel.owner_id);
+        
+        if (members.size === 0) {
+          await interaction.reply({
+            content: 'Es sind keine anderen Benutzer im Voice-Channel.',
+            flags: ['Ephemeral']
+          });
+          return;
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('kick_user_select')
+          .setPlaceholder('Wähle einen Benutzer zum Kicken')
+          .addOptions(
+            members.map(member => 
+              new StringSelectMenuOptionBuilder()
+                .setLabel(member.displayName)
+                .setDescription(`ID: ${member.id}`)
+                .setValue(member.id)
+            )
+          );
+
+        await interaction.reply({
+          content: 'Wähle einen Benutzer zum Kicken:',
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)],
+          flags: ['Ephemeral']
+        });
+        break;
+      }
+      case 'toggle_user': {
+        console.log('Showing user block/unblock menu');
+        
+        // Get all members in the voice channel except the current owner
+        const members = voiceChannel.members.filter(member => member.id !== tempChannel.owner_id);
+        
+        if (members.size === 0) {
+          await interaction.reply({
+            content: 'Es sind keine anderen Benutzer im Voice-Channel.',
+            flags: ['Ephemeral']
+          });
+          return;
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('block_user_select')
+          .setPlaceholder('Wähle einen Benutzer zum Blocken')
+          .addOptions(
+            members.map(member => 
+              new StringSelectMenuOptionBuilder()
+                .setLabel(member.displayName)
+                .setDescription(`ID: ${member.id}`)
+                .setValue(member.id)
+            )
+          );
+
+        await interaction.reply({
+          content: 'Wähle einen Benutzer zum Blocken:',
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)],
+          flags: ['Ephemeral']
+        });
+        break;
+      }
+      case 'unblock_user': {
+        const userId = interaction.customId.split('_')[2]; // Extract user ID from customId
+        try {
+          // Remove block permissions
+          await voiceChannel.permissionOverwrites.delete(userId);
+          await interaction.update({
+            content: `Der Benutzer wurde erfolgreich entblockt.`,
+            components: []
+          });
+        } catch (error) {
+          console.error('Error unblocking user:', error);
+          await interaction.update({
+            content: 'Es gab einen Fehler beim Entblocken des Benutzers.',
+            components: []
+          });
+        }
+        break;
+      }
     }
-    // Weitere Cases für andere Buttons werden später implementiert
+  } else if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === 'transfer_owner_select') {
+      const newOwnerId = interaction.values[0];
+      const newOwner = voiceChannel.members.get(newOwnerId);
+      
+      if (!newOwner) {
+        await interaction.reply({
+          content: 'Der ausgewählte Benutzer ist nicht mehr im Voice-Channel.',
+          flags: ['Ephemeral']
+        });
+        return;
+      }
+
+      try {
+        // Update permissions
+        await voiceChannel.permissionOverwrites.edit(newOwnerId, {
+          ManageChannels: true,
+          MoveMembers: true,
+          MuteMembers: true,
+          DeafenMembers: true
+        });
+
+        // Remove old owner permissions
+        await voiceChannel.permissionOverwrites.edit(tempChannel.owner_id, {
+          ManageChannels: false,
+          MoveMembers: false,
+          MuteMembers: false,
+          DeafenMembers: false
+        });
+
+        // Update database
+        await db.updateTempChannel(tempChannel.id, {
+          ownerId: newOwnerId
+        });
+
+        await interaction.update({
+          content: `Der Besitzer wurde erfolgreich an ${newOwner.toString()} übertragen.`,
+          components: []
+        });
+      } catch (error) {
+        console.error('Error transferring ownership:', error);
+        await interaction.update({
+          content: 'Es gab einen Fehler beim Übertragen des Besitzers.',
+          components: []
+        });
+      }
+    } else if (interaction.customId === 'kick_user_select') {
+      const userId = interaction.values[0];
+      const user = voiceChannel.members.get(userId);
+      
+      if (!user) {
+        await interaction.reply({
+          content: 'Der ausgewählte Benutzer ist nicht mehr im Voice-Channel.',
+          flags: ['Ephemeral']
+        });
+        return;
+      }
+
+      try {
+        // Kick user
+        await user.voice.disconnect();
+        await interaction.update({
+          content: `${user.toString()} wurde erfolgreich gekickt.`,
+          components: []
+        });
+      } catch (error) {
+        console.error('Error kicking user:', error);
+        await interaction.update({
+          content: 'Es gab einen Fehler beim Kicken des Benutzers.',
+          components: []
+        });
+      }
+    } else if (interaction.customId === 'block_user_select') {
+      const userId = interaction.values[0];
+      const user = voiceChannel.members.get(userId);
+      
+      if (!user) {
+        await interaction.reply({
+          content: 'Der ausgewählte Benutzer ist nicht mehr im Voice-Channel.',
+          flags: ['Ephemeral']
+        });
+        return;
+      }
+
+      try {
+        // Block user
+        await voiceChannel.permissionOverwrites.edit(userId, {
+          Connect: false,
+          ViewChannel: false
+        });
+
+        // Create unblock button
+        const unblockButton = new ButtonBuilder()
+          .setCustomId(`unblock_user_${userId}`)
+          .setLabel('Benutzer entblocken')
+          .setStyle(ButtonStyle.Danger);
+
+        await interaction.update({
+          content: `${user.toString()} wurde erfolgreich blockiert.`,
+          components: [new ActionRowBuilder<ButtonBuilder>().addComponents(unblockButton)]
+        });
+      } catch (error) {
+        console.error('Error blocking user:', error);
+        await interaction.update({
+          content: 'Es gab einen Fehler beim Blocken des Benutzers.',
+          components: []
+        });
+      }
+    }
   }
 }
 
@@ -154,6 +379,64 @@ export async function handleSettingsModal(interaction: ModalSubmitInteraction) {
       content: 'Nur der Besitzer dieses Channels kann die Einstellungen ändern.',
       flags: ['Ephemeral']
     });
+    return;
+  }
+
+  if (interaction.customId === 'transfer_owner_modal') {
+    const newOwnerId = interaction.fields.getTextInputValue('new_owner_id');
+    
+    // Validate the new owner ID
+    const newOwner = await interaction.guild?.members.fetch(newOwnerId).catch(() => null);
+    if (!newOwner) {
+      await interaction.reply({
+        content: 'Der angegebene Benutzer wurde nicht gefunden.',
+        flags: ['Ephemeral']
+      });
+      return;
+    }
+
+    // Check if the new owner is in the voice channel
+    if (!voiceChannel.members.has(newOwnerId)) {
+      await interaction.reply({
+        content: 'Der neue Besitzer muss im Voice-Channel sein.',
+        flags: ['Ephemeral']
+      });
+      return;
+    }
+
+    try {
+      // Update permissions
+      await voiceChannel.permissionOverwrites.edit(newOwnerId, {
+        ManageChannels: true,
+        MoveMembers: true,
+        MuteMembers: true,
+        DeafenMembers: true
+      });
+
+      // Remove old owner permissions
+      await voiceChannel.permissionOverwrites.edit(tempChannel.owner_id, {
+        ManageChannels: false,
+        MoveMembers: false,
+        MuteMembers: false,
+        DeafenMembers: false
+      });
+
+      // Update database
+      await db.updateTempChannel(tempChannel.id, {
+        ownerId: newOwnerId
+      });
+
+      await interaction.reply({
+        content: `Der Besitzer wurde erfolgreich an ${newOwner.toString()} übertragen.`,
+        flags: ['Ephemeral']
+      });
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+      await interaction.reply({
+        content: 'Es gab einen Fehler beim Übertragen des Besitzers.',
+        flags: ['Ephemeral']
+      });
+    }
     return;
   }
 

@@ -118,7 +118,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     } else if (interaction.isStringSelectMenu()) {
       console.log('Processing select menu interaction...');
       console.log('Select Menu ID:', interaction.customId);
-      console.log('Selected Values:', interaction.values);
       
       if (
         interaction.customId === 'log_type_select' ||
@@ -135,6 +134,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       ) {
         console.log('Routing to handleSelectMenuInteraction...');
         await handleSelectMenuInteraction(interaction);
+      } else if (
+        interaction.customId === 'transfer_owner_select'
+      ) {
+        console.log('Routing to handleVoiceControl...');
+        await handleVoiceControl(interaction);
       } else {
         console.log('⚠️ Unbekanntes Select Menu:', interaction.customId);
       }
