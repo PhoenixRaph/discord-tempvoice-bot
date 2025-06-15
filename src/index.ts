@@ -12,7 +12,7 @@ import { registerCommands } from './utils/registerCommands';
 import { handleTempVoice } from './handlers/tempVoiceHandler';
 import { handleButtonInteraction as handleSetupButton, handleModalSubmit as handleSetupModal } from './handlers/setupHandler';
 import { handleVoiceControl, handleSettingsModal } from './handlers/voiceControlHandler';
-import { handleLogButton, handleLogSelectMenu } from './handlers/logSetupHandler';
+import { handleLogSelectMenu } from './handlers/logSetupHandler';
 import { createPermissionErrorEmbed, checkBotPermissions } from './utils/permissionUtils';
 import { 
   command as tempVoiceCommand, 

@@ -10,11 +10,10 @@ import {
 
 export function createVoiceChannelControlEmbed(allowedActions: string[]) {
   const actionDescriptions: { [key: string]: string } = {
-    'edit_name': '✏️ Ändere den Namen deines Kanals',
-    'edit_limit': '📏 Passe das Nutzerlimit an',
-    'transfer_owner': '👑 Übertrage die Besitzerschaft an einen anderen Nutzer',
-    'kick_user': '👢 Kicke einen Nutzer aus deinem Kanal',
-    'ban_user': '🔨 Sperre einen Nutzer aus deinem Kanal'
+    'edit_name': '⚙️ Kanal Einstellungen (Name & Limit)',
+    'transfer_owner': '👑 Besitzer übertragen',
+    'kick_user': '📞 Nutzer kicken',
+    'ban_user': '👤 Nutzer ent-/blocken'
   };
 
   const enabledActions = allowedActions
